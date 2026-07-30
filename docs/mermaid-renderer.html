@@ -4,9 +4,12 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<title>EA Markdown Renderer</title>
+<title>Mermaid Renderer</title>
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = { darkMode: "class" };
+</script>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
 
 <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
@@ -14,6 +17,10 @@
 <style>
     :root {
         color-scheme: light;
+    }
+
+    #app.dark {
+        color-scheme: dark;
     }
 
     html,
@@ -91,6 +98,41 @@
       color: #334155 !important;
     }
 
+    .dark .ea-grid {
+      background-color: #12161c;
+      background-image:
+        linear-gradient(#1f2530 1px, transparent 1px),
+        linear-gradient(90deg, #1f2530 1px, transparent 1px),
+        linear-gradient(#181c24 1px, transparent 1px),
+        linear-gradient(90deg, #181c24 1px, transparent 1px);
+    }
+
+    .dark .diagram .node rect,
+    .dark .diagram .node polygon,
+    .dark .diagram .node path,
+    .dark .diagram .node circle,
+    .dark .diagram .node ellipse {
+      stroke: #8a93a3 !important;
+    }
+
+    .dark .diagram .nodeLabel,
+    .dark .diagram .edgeLabel {
+      color: #e2e8f0 !important;
+    }
+
+    .dark .diagram .edgeLabel {
+      background: #12161c !important;
+    }
+
+    .dark .diagram .cluster rect {
+      fill: rgba(35, 41, 54, 0.62) !important;
+      stroke: #5b6472 !important;
+    }
+
+    .dark .diagram .cluster-label {
+      color: #cbd5e1 !important;
+    }
+
     .diagram g.node {
       cursor: pointer;
     }
@@ -142,82 +184,91 @@
 </head>
 
 <body>
-<div id="app" class="h-full flex flex-col text-slate-800">
-    <header class="h-14 shrink-0 bg-[#263746] text-white flex items-center px-4 shadow-md z-30">
-        <div class="flex items-center gap-3 min-w-0">
-        <span class="material-icons-round text-sky-300">
+<div id="app" class="h-full">
+    <div class="h-full flex flex-col text-slate-800 dark:text-slate-100">
+    <header class="h-11 shrink-0 bg-[#263746] text-white flex items-center px-3 gap-3 shadow-md z-30">
+        <div class="flex items-center gap-2 min-w-0 shrink-0">
+            <span class="material-icons-round text-sky-300 !text-[18px]">
             account_tree
         </span>
-        
-        <div class="min-w-0">
+
         <h1 class="font-semibold text-sm tracking-wide truncate">
-            EA Markdown Renderer
+            Mermaid Renderer
         </h1>
-        
-        <p class="text-[11px] text-slate-300 truncate">
-            Aktivitätsdiagramm mit bearbeitbaren Elementnotizen
-        </p>
-        </div>
+
+        <span class="text-[10px] text-slate-300 tabular-nums whitespace-nowrap">
+            {{ nodeCount }} Elemente · {{ noteEntries.length }} Notizen
+        </span>
         </div>
 
-    <div class="ml-auto flex items-center gap-1">
-        <button type="button" title="Diagramm einpassen" class="p-2 rounded hover:bg-white/10" @click="fitDiagram">
-            <span class="material-icons-round">fit_screen</span>
+    <div class="flex-1 flex justify-center min-w-0">
+        <div class="inline-flex rounded-sm bg-white/10 p-0.5 text-xs">
+            <button type="button" class="px-3 py-1 rounded-sm flex items-center gap-1.5" :class="
+                  activeView === 'diagram'
+                    ? 'bg-white text-slate-800 shadow-sm'
+                    : 'text-slate-200 hover:bg-white/10'
+                " @click="renderDiagram">
+                <span class="material-icons-round !text-[15px]">schema</span>
+                Diagramm
+            </button>
+
+            <button type="button" class="px-3 py-1 rounded-sm flex items-center gap-1.5" :class="
+                  activeView === 'source'
+                    ? 'bg-white text-slate-800 shadow-sm'
+                    : 'text-slate-200 hover:bg-white/10'
+                " @click="activeView = 'source'">
+                <span class="material-icons-round !text-[15px]">code</span>
+                Quelltext
+            </button>
+        </div>
+    </div>
+
+    <div class="flex items-center gap-0.5 shrink-0">
+        <button type="button" title="Diagramm einpassen" class="p-1.5 rounded hover:bg-white/10" @click="fitDiagram">
+            <span class="material-icons-round !text-[18px]">fit_screen</span>
         </button>
-        
-        <button type="button" title="Verkleinern" class="p-2 rounded hover:bg-white/10" @click="zoomOut">
-            <span class="material-icons-round">zoom_out</span>
+
+        <button type="button" title="Verkleinern" class="p-1.5 rounded hover:bg-white/10" @click="zoomOut">
+            <span class="material-icons-round !text-[18px]">zoom_out</span>
         </button>
-        
+
         <span class="text-xs tabular-nums w-12 text-center">
             {{ Math.round(zoom * 100) }}%
         </span>
-        
-        <button type="button" title="Vergrößern" class="p-2 rounded hover:bg-white/10" @click="zoomIn">
-            <span class="material-icons-round">zoom_in</span>
+
+        <button type="button" title="Vergrößern" class="p-1.5 rounded hover:bg-white/10" @click="zoomIn">
+            <span class="material-icons-round !text-[18px]">zoom_in</span>
         </button>
-        
-        <div class="h-6 w-px bg-white/20 mx-2"></div>
+
+        <div class="h-5 w-px bg-white/20 mx-1.5"></div>
+
+        <button type="button" :title="darkMode ? 'Helles Design' : 'Dunkles Design'" class="p-1.5 rounded hover:bg-white/10" @click="toggleDarkMode">
+            <span class="material-icons-round !text-[18px]">{{ darkMode ? 'light_mode' : 'dark_mode' }}</span>
+        </button>
+
+        <div class="h-5 w-px bg-white/20 mx-1.5"></div>
 <button type="button"
-    class="h-9 px-3 rounded bg-[#0b6bcb] hover:bg-[#075ba9] flex items-center gap-2 text-sm font-medium shadow"
+    title="Mermaid einfügen"
+    class="h-8 px-2.5 rounded bg-white/10 hover:bg-white/20 flex items-center gap-1.5 text-xs font-medium shadow"
+    @click="pasteMermaid">
+    <span class="material-icons-round !text-[16px]">content_paste</span>
+    <span class="hidden sm:inline">Mermaid einfügen</span>
+</button>
+<button type="button"
+    class="h-8 px-2.5 rounded bg-[#0b6bcb] hover:bg-[#075ba9] flex items-center gap-1.5 text-xs font-medium shadow"
     @click="copyMarkdown">
-    <span class="material-icons-round">content_copy</span>
-    <span class="hidden sm:inline">Markdown kopieren</span>
+    <span class="material-icons-round !text-[16px]">content_copy</span>
+    <span class="hidden sm:inline">Mermaid kopieren</span>
 </button>
 </div>
 </header>
 
-    <div class="h-9 shrink-0 bg-[#f5f6f7] border-b border-slate-300 flex items-center px-3 gap-1 text-xs z-20">
-        <button type="button" class="px-3 py-1 border rounded-sm flex items-center gap-1.5" :class="
-              activeView === 'diagram'
-                ? 'bg-white border-slate-300 shadow-sm text-sky-700'
-                : 'border-transparent hover:bg-white/70'
-            " @click="activeView = 'diagram'">
-            <span class="material-icons-round !text-[16px]">schema</span>
-            Diagramm
-        </button>
-    
-        <button type="button" class="px-3 py-1 border rounded-sm flex items-center gap-1.5" :class="
-              activeView === 'source'
-                ? 'bg-white border-slate-300 shadow-sm text-sky-700'
-                : 'border-transparent hover:bg-white/70'
-            " @click="activeView = 'source'">
-            <span class="material-icons-round !text-[16px]">code</span>
-            Quelltext
-        </button>
-    
-        <span class="ml-auto text-slate-500">
-            {{ nodeCount }} Elemente · {{ noteEntries.length }} Notizen
-        </span>
-    </div>
-
     <main class="flex-1 min-h-0 flex overflow-hidden">
-        <section class="flex-1 min-w-0 relative bg-white">
+        <section class="flex-1 min-w-0 relative bg-white dark:bg-[#12161c]">
         <div v-if="activeView === 'diagram'" ref="viewport" class="absolute inset-0 ea-grid overflow-auto"
-            @wheel.ctrl.prevent="onWheel">
-            <div class="min-w-full min-h-full p-10 flex justify-center items-start">
-            <div ref="diagramEl" class="diagram origin-top transition-transform duration-100"
-                :style="{ transform: `scale(${zoom})` }"></div>
+            @wheel="onWheel" @mousedown="startPan">
+            <div class="min-w-full min-h-full p-10 flex items-start">
+            <div ref="diagramEl" class="diagram mx-auto"></div>
             </div>
             </div>
 <div v-else class="absolute inset-0 flex flex-col bg-[#1e2935]">
@@ -227,22 +278,13 @@
         </span>
 
         diagram.md
-
-        <button type="button"
-            class="ml-auto px-2 py-1 rounded bg-sky-700 hover:bg-sky-600 text-white flex items-center gap-1"
-            @click="renderDiagram">
-            <span class="material-icons-round !text-[15px]">
-                play_arrow
-            </span>
-            Rendern
-        </button>
     </div>
 <textarea v-model="source" spellcheck="false"
     class="flex-1 resize-none bg-[#1e2935] text-[#d9e2ec] p-4 outline-none font-mono text-xs leading-5"></textarea>
 </div>
 <div v-if="error"
-    class="absolute left-4 right-4 bottom-4 bg-red-50 border border-red-300 text-red-800 rounded shadow-lg p-3 text-sm flex gap-2 z-20">
-    <span class="material-icons-round text-red-600">error</span>
+    class="absolute left-4 right-4 bottom-4 bg-red-50 dark:bg-red-950 border border-red-300 dark:border-red-800 text-red-800 dark:text-red-200 rounded shadow-lg p-3 text-sm flex gap-2 z-20">
+    <span class="material-icons-round text-red-600 dark:text-red-400">error</span>
 <div>
     <strong>Renderfehler</strong>
     <div class="mt-1 whitespace-pre-wrap text-xs">
@@ -256,24 +298,34 @@
         </div>
         </section>
 
-    <div class="resize-handle shrink-0 bg-slate-300" @mousedown="startResize"></div>
+    <div class="resize-handle shrink-0 bg-slate-300 dark:bg-slate-700" @mousedown="startResize"></div>
 
-    <aside class="shrink-0 bg-[#f7f7f7] border-l border-slate-300 flex flex-col min-w-[280px] max-w-[620px]"
+    <aside class="shrink-0 bg-[#f7f7f7] dark:bg-[#12161c] border-l border-slate-300 dark:border-slate-700 flex flex-col min-w-[280px] max-w-[620px]"
         :style="{ width: panelWidth + 'px' }">
-        <div class="h-10 shrink-0 border-b border-slate-300 bg-[#e8ebee] flex items-center px-3 gap-2">
-            <span class="material-icons-round text-slate-600">notes</span>
+        <div class="h-10 shrink-0 border-b border-slate-300 dark:border-slate-700 bg-[#e8ebee] dark:bg-[#1a1f27] flex items-center px-3 gap-2">
+            <span class="material-icons-round text-slate-600 dark:text-slate-300">notes</span>
 
         <h2 class="font-semibold text-sm">Notizen</h2>
 <span v-if="dirty"
-    class="ml-auto text-[10px] uppercase tracking-wide text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+    class="ml-auto text-[10px] uppercase tracking-wide text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 rounded-full">
     geändert
 </span>
+
+<button type="button"
+    :class="dirty ? '' : 'ml-auto'"
+    :title="showNoteList ? 'Elementübersicht ausblenden' : 'Elementübersicht einblenden'"
+    class="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300"
+    @click="showNoteList = !showNoteList">
+    <span class="material-icons-round !text-[18px]">
+        {{ showNoteList ? 'chevron_left' : 'chevron_right' }}
+    </span>
+</button>
 </div>
 
-        <div class="p-3 border-b border-slate-300 bg-white">
+        <div v-if="showNoteList" class="p-3 border-b border-slate-300 dark:border-slate-700 bg-white dark:bg-[#12161c]">
             <label class="relative block">
                 <span
-              class="material-icons-round absolute left-2 top-2 text-slate-400 !text-[18px]"
+              class="material-icons-round absolute left-2 top-2 text-slate-400 dark:text-slate-500 !text-[18px]"
             >
               search
             </span>
@@ -282,13 +334,13 @@
               v-model="search"
               type="search"
               placeholder="Element oder Notiz suchen"
-              class="w-full h-9 pl-8 pr-8 border border-slate-300 rounded-sm text-sm outline-none focus:ring-1 focus:ring-sky-600 focus:border-sky-600"
+              class="w-full h-9 pl-8 pr-8 border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0d1117] dark:text-slate-100 rounded-sm text-sm outline-none focus:ring-1 focus:ring-sky-600 focus:border-sky-600"
             />
 
             <button
               v-if="search"
               type="button"
-              class="absolute right-2 top-2 text-slate-400"
+              class="absolute right-2 top-2 text-slate-400 dark:text-slate-500"
               @click="search = ''"
             >
               <span class="material-icons-round !text-[18px]">close</span>
@@ -297,48 +349,40 @@
         </div>
 
         <div class="flex-1 min-h-0 flex">
-        <nav class="w-[42%] min-w-[125px] overflow-y-auto border-r border-slate-300 bg-white">
+        <nav v-if="showNoteList" class="w-[42%] min-w-[125px] overflow-y-auto border-r border-slate-300 dark:border-slate-700 bg-white dark:bg-[#12161c]">
             <button v-for="item in filteredNotes" :key="item.noteId" type="button"
-                class="w-full text-left px-3 py-2.5 border-l-4 border-b border-slate-100" :class="
+                class="w-full text-left px-3 py-2.5 border-l-4 border-b border-slate-100 dark:border-slate-800" :class="
                         selectedId === item.nodeId
-                          ? 'bg-[#dcecf9] border-l-[#0b6bcb]'
-                          : 'border-l-transparent hover:bg-slate-50'
+                          ? 'bg-[#dcecf9] dark:bg-sky-500/15 border-l-[#0b6bcb] dark:border-l-sky-400'
+                          : 'border-l-transparent hover:bg-slate-50 dark:hover:bg-white/5'
                       " @click="selectNote(item.nodeId)">
-                <div class="text-xs font-semibold text-slate-700 truncate">
-                    {{ item.nodeId }}
-                </div>
-        
-                <div class="text-[11px] text-slate-500 mt-0.5 line-clamp-2">
+                <div class="text-xs font-medium text-slate-700 dark:text-slate-200 line-clamp-3">
                     {{ item.label }}
                 </div>
             </button>
-<div v-if="!filteredNotes.length" class="p-4 text-center text-xs text-slate-500">
+<div v-if="!filteredNotes.length" class="p-4 text-center text-xs text-slate-500 dark:text-slate-400">
     Keine Notizen gefunden
 </div>
 </nav>
 
         <div class="flex-1 min-w-0 flex flex-col">
             <template v-if="selectedNote">
-                <div class="p-3 border-b border-slate-300 bg-[#fafafa]">
-                <div class="text-[10px] uppercase tracking-wider text-slate-500">
+                <div class="p-3 border-b border-slate-300 dark:border-slate-700 bg-[#fafafa] dark:bg-[#161b22]">
+                <div class="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     Element
                 </div>
-<div class="font-semibold text-sm mt-0.5 break-all">
-    {{ selectedNote.nodeId }}
-</div>
-
-<div class="text-xs text-slate-500 mt-1 line-clamp-2">
+<div class="font-semibold text-sm mt-0.5">
     {{ selectedNote.label }}
 </div>
 </div>
 
 <textarea v-model="selectedNote.text" spellcheck="true" placeholder="Notiz eingeben..."
-    class="flex-1 min-h-[160px] resize-none p-3 bg-white outline-none text-sm leading-6 focus:shadow-inner"
+    class="flex-1 min-h-[160px] resize-none p-3 bg-white dark:bg-[#0d1117] dark:text-slate-100 outline-none text-sm leading-6 focus:shadow-inner"
                 @input="dirty = true"
               ></textarea>
 
               <div
-                class="p-2 border-t border-slate-300 bg-[#eef0f2] flex gap-2"
+                class="p-2 border-t border-slate-300 dark:border-slate-700 bg-[#eef0f2] dark:bg-[#1a1f27] flex gap-2"
               >
                 <button
                   type="button"
@@ -352,7 +396,7 @@
                 <button
                   type="button"
                   title="Notiz kopieren"
-                  class="h-8 w-9 bg-white border border-slate-300 hover:bg-slate-50 rounded-sm"
+                  class="h-8 w-9 bg-white dark:bg-[#12161c] border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-white/5 rounded-sm"
                   @click="copyCurrentNote"
                 >
                   <span class="material-icons-round !text-[17px]">
@@ -361,8 +405,8 @@
                 </button>
               </div>
             </template>
-<div v-else class="flex-1 flex flex-col items-center justify-center text-center p-5 text-slate-500">
-    <span class="material-icons-round !text-4xl text-slate-300">
+<div v-else class="flex-1 flex flex-col items-center justify-center text-center p-5 text-slate-500 dark:text-slate-400">
+    <span class="material-icons-round !text-4xl text-slate-300 dark:text-slate-700">
         touch_app
     </span>
 
@@ -375,16 +419,6 @@
 </aside>
 </main>
 
-    <footer class="h-6 shrink-0 bg-[#263746] text-slate-300 px-3 flex items-center text-[10px] z-30">
-        <span class="w-2 h-2 rounded-full mr-2" :class="error ? 'bg-red-400' : 'bg-emerald-400'"></span>
-    
-        {{ error ? 'Diagramm enthält Fehler' : 'Bereit' }}
-    
-        <span class="ml-auto">
-            Vue.js · Tailwind CSS · Mermaid
-        </span>
-    </footer>
-
     <transition name="toast">
     <div v-if="toast"
         class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-4 py-2 rounded shadow-xl text-sm flex items-center gap-2 z-50">
@@ -396,6 +430,7 @@
     </div>
     </transition>
     </div>
+</div>
 
 <script>
     const SAMPLE = `flowchart TD
@@ -422,7 +457,8 @@ NoteEnd --- End`;
             ref,
             computed,
             nextTick,
-            onMounted
+            onMounted,
+            watch
         } = Vue;
 
         createApp({
@@ -430,18 +466,25 @@ NoteEnd --- End`;
             const NL = String.fromCharCode(10);
             const BS = String.fromCharCode(92);
 
-            const source = ref(SAMPLE);
+            const source = ref(
+                localStorage.getItem("mermaidRendererSource") || SAMPLE
+            );
             const diagramEl = ref(null);
             const viewport = ref(null);
             const zoom = ref(0.9);
+            const baseWidth = ref(0);
             const activeView = ref("diagram");
             const panelWidth = ref(470);
             const search = ref("");
             const notes = ref([]);
             const selectedId = ref("");
+            const showNoteList = ref(true);
             const dirty = ref(false);
             const error = ref("");
             const toast = ref("");
+            const darkMode = ref(
+                localStorage.getItem("mermaidRendererDarkMode") === "1"
+            );
 
             const splitLines = value => value.split(NL);
 
@@ -609,13 +652,23 @@ NoteEnd --- End`;
             function buildDiagramSource(text) {
                 const diagram = stripNotes(text);
 
-                const styles = [
-                    "classDef default fill:#fffdf3,stroke:#4d5966,color:#1f2937;",
-                    "classDef data fill:#dcebf7,stroke:#47718d,color:#1f2937;",
-                    "classDef decision fill:#fff3c4,stroke:#8a7132,color:#1f2937;",
-                    "classDef terminal fill:#e5edf4,stroke:#526779,color:#17212b;",
-                    "classDef merge fill:#334155,stroke:#1e293b,color:#334155;"
-                ].join(NL);
+                const styles = (
+                    darkMode.value
+                        ? [
+                            "classDef default fill:#2a2f3a,stroke:#8a93a3,color:#e2e8f0;",
+                            "classDef data fill:#20384a,stroke:#6ea8cf,color:#e2e8f0;",
+                            "classDef decision fill:#4a3f14,stroke:#d8b94d,color:#f5eccb;",
+                            "classDef terminal fill:#232936,stroke:#8a93a3,color:#e2e8f0;",
+                            "classDef merge fill:#0f172a,stroke:#475569,color:#0f172a;"
+                        ]
+                        : [
+                            "classDef default fill:#fffdf3,stroke:#4d5966,color:#1f2937;",
+                            "classDef data fill:#dcebf7,stroke:#47718d,color:#1f2937;",
+                            "classDef decision fill:#fff3c4,stroke:#8a7132,color:#1f2937;",
+                            "classDef terminal fill:#e5edf4,stroke:#526779,color:#17212b;",
+                            "classDef merge fill:#334155,stroke:#1e293b,color:#334155;"
+                        ]
+                ).join(NL);
 
                 const classifications = classifyNodes(diagram);
 
@@ -679,6 +732,10 @@ NoteEnd --- End`;
         });
 
         async function renderDiagram() {
+            if (dirty.value) {
+                applyNotes();
+            }
+
             error.value = "";
             notes.value = parseNotes(source.value);
             dirty.value = false;
@@ -701,21 +758,30 @@ NoteEnd --- End`;
 
               diagramEl.value.innerHTML = result.svg;
 
+                    const svg = diagramEl.value.querySelector("svg");
+
+                    if (svg) {
+                        baseWidth.value = svg.getBoundingClientRect().width;
+                        applyZoomToSvg();
+                    }
+
+                    const labels = extractNodeLabels(source.value);
+
                     diagramEl.value
                         .querySelectorAll("g.node")
                         .forEach(node => {
                             node.addEventListener("click", () => {
                                 const id = (node.id || "")
-                                    .replace(/^flowchart-/, "")
+                                    .split("flowchart-")
+                                    .pop()
                                     .replace(/-\d+$/, "");
 
-                                if (
-                                    notes.value.some(
-                                        item => item.nodeId === id
-                                    )
-                                ) {
-                                    selectNote(id);
+                                if (!id) {
+                                    return;
                                 }
+
+                                ensureNote(id, labels[id] || id);
+                                selectNote(id);
                             });
                         });
                 } catch (exception) {
@@ -724,6 +790,19 @@ NoteEnd --- End`;
                             ? exception.message
                             : String(exception);
                 }
+            }
+
+            function ensureNote(id, label) {
+                if (notes.value.some(item => item.nodeId === id)) {
+                    return;
+                }
+
+                notes.value.push({
+                    noteId: "Note" + id,
+                    nodeId: id,
+                    label,
+                    text: ""
+                });
             }
 
             function selectNote(id) {
@@ -794,12 +873,26 @@ NoteEnd --- End`;
 
             function applyNotes() {
                 let text = source.value;
+                const appended = [];
 
                 notes.value.forEach(item => {
                     const marker = item.noteId + "@{";
                     const start = text.indexOf(marker);
 
                     if (start < 0) {
+                        if (item.text.trim()) {
+                            appended.push(
+                                item.noteId +
+                                '@{ shape: braces, label: "' +
+                                escapeNote(item.text) +
+                                '" }' +
+                                NL +
+                                item.noteId +
+                                " --- " +
+                                item.nodeId
+                            );
+                        }
+
                         return;
                     }
 
@@ -823,6 +916,10 @@ NoteEnd --- End`;
                         replacement +
                         text.slice(end + 1);
                 });
+
+                if (appended.length) {
+                    text = text + NL + appended.join(NL);
+                }
 
                 source.value = text;
                 dirty.value = false;
@@ -872,7 +969,26 @@ NoteEnd --- End`;
                     }
 
                     await copyText(source.value);
-                    showToast("Markdown kopiert");
+                        showToast("Mermaid kopiert");
+                    } catch (exception) {
+                        error.value =
+                            exception && exception.message
+                                ? exception.message
+                                : String(exception);
+                    }
+                }
+
+                async function pasteMermaid() {
+                    try {
+                        const text = await navigator.clipboard.readText();
+
+                        if (!text) {
+                            return;
+                        }
+
+                        source.value = text;
+                        await renderDiagram();
+                        showToast("Mermaid eingefügt");
                 } catch (exception) {
                     error.value =
                         exception && exception.message
@@ -905,38 +1021,141 @@ NoteEnd --- End`;
                 }, 2200);
             }
 
-            function zoomIn() {
-                zoom.value = Math.min(
-                    2,
-                    Number((zoom.value + 0.1).toFixed(2))
+            function applyZoomToSvg() {
+                if (!diagramEl.value || !baseWidth.value) {
+                    return;
+                }
+
+                const svg = diagramEl.value.querySelector("svg");
+
+                if (svg) {
+                    svg.style.width = baseWidth.value * zoom.value + "px";
+                }
+            }
+
+            function clampZoom(value) {
+                return Math.min(20, Math.max(0.3, Number(value.toFixed(2))));
+            }
+
+            function zoomAt(clientX, clientY, factor) {
+                const el = viewport.value;
+
+                if (!el) {
+                    zoom.value = clampZoom(zoom.value * factor);
+                    return;
+                }
+
+                const rect = el.getBoundingClientRect();
+                const offsetX = clientX - rect.left + el.scrollLeft;
+                const offsetY = clientY - rect.top + el.scrollTop;
+                const oldZoom = zoom.value;
+                const newZoom = clampZoom(oldZoom * factor);
+
+                if (newZoom === oldZoom) {
+                    return;
+                }
+
+                const ratio = newZoom / oldZoom;
+                zoom.value = newZoom;
+
+                nextTick(() => {
+                    el.scrollLeft = offsetX * ratio - (clientX - rect.left);
+                    el.scrollTop = offsetY * ratio - (clientY - rect.top);
+                });
+            }
+
+            function zoomAtCenter(factor) {
+                const el = viewport.value;
+
+                if (!el) {
+                    zoom.value = clampZoom(zoom.value * factor);
+                    return;
+                }
+
+                const rect = el.getBoundingClientRect();
+                zoomAt(
+                    rect.left + rect.width / 2,
+                    rect.top + rect.height / 2,
+                    factor
                 );
+            }
+
+            function zoomIn() {
+                zoomAtCenter(1.15);
             }
 
             function zoomOut() {
-                zoom.value = Math.max(
-                    0.3,
-                    Number((zoom.value - 0.1).toFixed(2))
-                );
+                zoomAtCenter(1 / 1.15);
             }
 
             function onWheel(event) {
-                if (event.deltaY < 0) {
-                    zoomIn();
-                } else {
-                    zoomOut();
+                if (!event.ctrlKey) {
+                    return;
                 }
+
+                event.preventDefault();
+                zoomAt(
+                    event.clientX,
+                    event.clientY,
+                    event.deltaY < 0 ? 1.15 : 1 / 1.15
+                );
             }
 
             function fitDiagram() {
-                zoom.value = 0.8;
-
-                if (viewport.value) {
-                    viewport.value.scrollTo({
-                        top: 0,
-                        left: 0,
-                        behavior: "smooth"
-                    });
+                if (viewport.value && baseWidth.value) {
+                    const available = viewport.value.clientWidth - 80;
+                    zoom.value = clampZoom(available / baseWidth.value);
+                } else {
+                    zoom.value = 0.8;
                 }
+
+                nextTick(() => {
+                    if (viewport.value) {
+                        viewport.value.scrollTo({
+                            top: 0,
+                            left: 0,
+                            behavior: "smooth"
+                        });
+                    }
+                });
+            }
+
+            function startPan(event) {
+                if (event.button !== 1) {
+                    return;
+                }
+
+                event.preventDefault();
+
+                const el = viewport.value;
+
+                if (!el) {
+                    return;
+                }
+
+                const startX = event.clientX;
+                const startY = event.clientY;
+                const startScrollLeft = el.scrollLeft;
+                const startScrollTop = el.scrollTop;
+                const previousCursor = el.style.cursor;
+
+                el.style.cursor = "grabbing";
+
+                const move = currentEvent => {
+                    el.scrollLeft =
+                        startScrollLeft - (currentEvent.clientX - startX);
+                    el.scrollTop =
+                        startScrollTop - (currentEvent.clientY - startY);
+                };
+
+                const up = () => {
+                    el.style.cursor = previousCursor;
+                    window.removeEventListener("mousemove", move);
+                    window.removeEventListener("mouseup", up);
+                };
+
+                window.addEventListener("mousemove", move);
+                window.addEventListener("mouseup", up);
             }
 
             function startResize(event) {
@@ -978,7 +1197,78 @@ NoteEnd --- End`;
                 );
             }
 
+            function initMermaid() {
+                mermaid.initialize({
+                    startOnLoad: false,
+                    securityLevel: "loose",
+                    theme: "base",
+                    flowchart: {
+                        curve: "linear",
+                        htmlLabels: true,
+                        nodeSpacing: 38,
+                        rankSpacing: 56
+                    },
+                    themeVariables: darkMode.value
+                        ? {
+                            fontFamily:
+                                "Segoe UI, Arial, sans-serif",
+                            primaryColor: "#2a2f3a",
+                            primaryTextColor: "#e2e8f0",
+                            primaryBorderColor: "#8a93a3",
+                            lineColor: "#8a93a3",
+                            secondaryColor: "#20384a",
+                            tertiaryColor: "#1f2530",
+                            clusterBkg: "#232936",
+                            clusterBorder: "#5b6472"
+                        }
+                        : {
+                            fontFamily:
+                                "Segoe UI, Arial, sans-serif",
+                            primaryColor: "#fffdf3",
+                            primaryTextColor: "#1f2937",
+                            primaryBorderColor: "#4d5966",
+                            lineColor: "#596674",
+                            secondaryColor: "#dcebf7",
+                            tertiaryColor: "#f1f5f9",
+                            clusterBkg: "#e9eef4",
+                            clusterBorder: "#778899"
+                        }
+                });
+            }
+
+            function toggleDarkMode() {
+                darkMode.value = !darkMode.value;
+            }
+
+            function applyDarkClass(value) {
+                document
+                    .getElementById("app")
+                    .classList.toggle("dark", value);
+            }
+
+            watch(darkMode, value => {
+                localStorage.setItem(
+                    "mermaidRendererDarkMode",
+                    value ? "1" : "0"
+                );
+
+                applyDarkClass(value);
+                initMermaid();
+
+                if (activeView.value === "diagram") {
+                    renderDiagram();
+                }
+            });
+
+            watch(zoom, applyZoomToSvg);
+
+            watch(source, value => {
+                localStorage.setItem("mermaidRendererSource", value);
+            });
+
             onMounted(() => {
+                applyDarkClass(darkMode.value);
+
                 if (
                     typeof mermaid === "undefined"
                 ) {
@@ -987,32 +1277,9 @@ NoteEnd --- End`;
                     return;
                 }
 
-            mermaid.initialize({
-                startOnLoad: false,
-                securityLevel: "loose",
-                theme: "base",
-                flowchart: {
-                    curve: "linear",
-                    htmlLabels: true,
-                    nodeSpacing: 38,
-                    rankSpacing: 56
-                },
-                themeVariables: {
-                    fontFamily:
-                        "Segoe UI, Arial, sans-serif",
-                    primaryColor: "#fffdf3",
-                    primaryTextColor: "#1f2937",
-                    primaryBorderColor: "#4d5966",
-                    lineColor: "#596674",
-                    secondaryColor: "#dcebf7",
-                    tertiaryColor: "#f1f5f9",
-                    clusterBkg: "#e9eef4",
-                    clusterBorder: "#778899"
-            }
-          });
-
-            renderDiagram();
-        });
+                initMermaid();
+                renderDiagram();
+            });
 
             return {
                 source,
@@ -1024,9 +1291,12 @@ NoteEnd --- End`;
                 search,
                 notes,
                 selectedId,
+                showNoteList,
                 dirty,
                 error,
                 toast,
+                darkMode,
+                toggleDarkMode,
                 nodeCount,
                 noteEntries,
                 selectedNote,
@@ -1035,11 +1305,13 @@ NoteEnd --- End`;
                 selectNote,
                 applyNotes,
                 copyMarkdown,
+                pasteMermaid,
                 copyCurrentNote,
                 zoomIn,
                 zoomOut,
                 onWheel,
                 fitDiagram,
+                startPan,
                 startResize
             };
         }

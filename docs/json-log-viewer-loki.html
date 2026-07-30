@@ -23,12 +23,13 @@
       --fatal: #b877d9;
     }
     * { box-sizing: border-box; }
-    body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 Inter, system-ui, -apple-system, "Segoe UI", sans-serif; }
-    header { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 14px; padding: 15px 22px; border-bottom: 1px solid var(--border); background: #080808; box-shadow: 0 2px 14px #000; }
+    html, body { height: 100%; overflow: hidden; }
+    body { display: flex; flex-direction: column; margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 Inter, system-ui, -apple-system, "Segoe UI", sans-serif; }
+    header { flex-shrink: 0; display: flex; align-items: center; gap: 14px; padding: 15px 22px; border-bottom: 1px solid var(--border); background: #080808; box-shadow: 0 2px 14px #000; }
     .logo { width: 8px; height: 34px; border-radius: 3px; background: var(--yellow); box-shadow: 0 0 16px #f2cc0c55; }
     h1 { margin: 0; font-size: 19px; font-weight: 600; }
     .subtitle { color: var(--muted); font-size: 12px; }
-    main { max-width: 1900px; margin: auto; padding: 18px 22px 28px; }
+    main { flex: 1; min-height: 0; display: flex; flex-direction: column; max-width: 1900px; width: 100%; margin: auto; padding: 18px 22px 28px; overflow: hidden; }
     #uploadArea { display: grid; place-items: center; min-height: 260px; padding: 30px; border: 1px dashed #5b520d; border-radius: 6px; background: linear-gradient(180deg, #111, #0d0d0d); cursor: pointer; transition: .15s; }
     #uploadArea:hover, #uploadArea.active { border-color: var(--yellow); background: #151407; }
     .upload-inner { text-align: center; }
@@ -36,8 +37,8 @@
     .upload-title { font-size: 18px; font-weight: 600; }
     .upload-note { margin-top: 6px; color: var(--muted); }
     input[type=file] { display: none; }
-    #viewer { display: none; }
-    .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px; border: 1px solid var(--border); border-radius: 5px; background: var(--panel); }
+    #viewer { display: none; flex-direction: column; min-height: 0; flex: 1; }
+    .toolbar { flex-shrink: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px; border: 1px solid var(--border); border-radius: 5px; background: var(--panel); }
     button, input, select { min-height: 34px; border: 1px solid var(--border); border-radius: 3px; background: var(--panel-2); color: var(--text); font: inherit; }
     button { padding: 6px 11px; cursor: pointer; }
     button:hover { border-color: #686868; background: var(--panel-3); }
@@ -59,36 +60,36 @@
     .level-toggle.off { color: #565656; opacity: .72; text-decoration: line-through; }
     .level-toggle:not(.off) { background: #1c1c1c; box-shadow: inset 0 -2px currentColor; }
     .filter-actions { margin-left: 3px; color: var(--muted); }
+    .filters, .status { flex-shrink: 0; }
     .status { display: flex; flex-wrap: wrap; gap: 18px; min-height: 22px; margin: 7px 1px 10px; color: var(--muted); font-size: 12px; }
     .status strong { color: var(--yellow); font-weight: 500; }
     .error-text { color: var(--error); }
-    .table-wrap { overflow: auto; max-height: calc(100vh - 245px); border: 1px solid var(--border); border-radius: 4px; background: var(--panel); }
+    .table-wrap { flex: 1; min-height: 0; overflow: auto; border: 1px solid var(--border); border-radius: 4px; background: var(--panel); }
     table { width: 100%; border-collapse: collapse; table-layout: fixed; }
     th { position: sticky; top: 0; z-index: 2; padding: 8px 11px; border-bottom: 1px solid #464646; background: #171717; color: #bdbdbd; text-align: left; font-size: 12px; font-weight: 500; }
     td { padding: 7px 11px; border-bottom: 1px solid #242424; vertical-align: top; }
     tbody tr:hover { background: #191919; }
-    th:nth-child(1), td:nth-child(1) { width: 75px; color: #747474; }
-    th:nth-child(2), td:nth-child(2) { width: 205px; }
-    th:nth-child(3), td:nth-child(3) { width: 100px; }
-    th:nth-child(5), td:nth-child(5) { width: 85px; }
+    th:nth-child(1), td:nth-child(1) { width: 60px; color: #747474; }
+    th:nth-child(2), td:nth-child(2) { width: 110px; }
+    th:nth-child(4), td:nth-child(4) { width: 56px; }
+    tbody td:first-child { border-left: 4px solid var(--level-color, transparent); }
     td.message { color: #e5e5e5; font-family: "Cascadia Mono", "SFMono-Regular", Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
     .context { margin-top: 3px; color: #727272; font-family: inherit; font-size: 11px; }
-    .level { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
-    .level::before { width: 7px; height: 7px; border-radius: 50%; background: currentColor; content: ""; }
-    .level-debug { color: var(--debug); }
-    .level-info { color: var(--info); }
-    .level-warning { color: var(--warning); }
-    .level-error { color: var(--error); }
-    .level-fatal { color: var(--fatal); }
-    .level-other { color: #8d8d8d; }
+    td[title] { cursor: help; }
     mark { padding: 0 2px; border-radius: 2px; background: var(--yellow); color: #111; box-shadow: 0 0 0 1px var(--yellow-dark); }
-    details summary { color: var(--yellow); cursor: pointer; font-size: 12px; }
-    pre { max-height: 330px; overflow: auto; margin: 8px 0 2px; padding: 10px; border: 1px solid #303030; border-radius: 3px; background: #090909; color: #c4c4c4; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .json-btn { min-height: auto; padding: 3px 8px; border-color: var(--border); color: var(--muted); font-size: 11px; font-family: "Cascadia Mono", "SFMono-Regular", Consolas, monospace; background: transparent; }
+    .json-btn:hover { color: var(--yellow); border-color: var(--yellow-dark); background: var(--panel-3); }
     .empty { padding: 55px; color: var(--muted); text-align: center; }
-    .pager { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 10px; color: var(--muted); font-size: 12px; }
+    #jsonModal { width: min(900px, 90vw); max-height: 80vh; padding: 0; border: 1px solid var(--border); border-radius: 6px; background: var(--panel); color: var(--text); }
+    #jsonModal::backdrop { background: rgba(0, 0, 0, .6); }
+    .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--border); background: #171717; }
+    .modal-head span { color: #bdbdbd; font-size: 13px; font-weight: 500; }
+    #closeJson { min-height: auto; padding: 2px 9px; border: 0; color: var(--muted); font-size: 16px; background: transparent; }
+    #jsonModalContent { max-height: calc(80vh - 46px); margin: 0; padding: 14px; overflow: auto; color: #c4c4c4; font-family: "Cascadia Mono", "SFMono-Regular", Consolas, monospace; font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .pager { flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 10px; color: var(--muted); font-size: 12px; }
     .pager-controls { display: flex; align-items: center; gap: 8px; }
     button:disabled { cursor: default; opacity: .35; }
-    @media (max-width: 850px) { main, header { padding-left: 10px; padding-right: 10px; } .table-wrap { max-height: none; } th:nth-child(2), td:nth-child(2) { width: 170px; } th:nth-child(4), td:nth-child(4) { width: 600px; } .pager { align-items: flex-start; flex-direction: column; } }
+    @media (max-width: 850px) { main, header { padding-left: 10px; padding-right: 10px; } th:nth-child(2), td:nth-child(2) { width: 130px; } th:nth-child(3), td:nth-child(3) { width: 600px; } .pager { align-items: flex-start; flex-direction: column; } }
   </style>
 </head>
 <body>
@@ -117,33 +118,44 @@
     </div>
     <div id="status" class="status"></div>
     <div class="table-wrap">
-      <table><thead><tr><th>#</th><th>Zeit</th><th>Level</th><th>Message</th><th>Details</th></tr></thead><tbody id="logBody"></tbody></table>
+      <table><thead><tr><th>#</th><th>Zeit</th><th>Message</th><th>Details</th></tr></thead><tbody id="logBody"></tbody></table>
     </div>
     <div class="pager"><span id="range"></span><div class="pager-controls"><button id="prev" type="button">← Zurück</button><span id="pageInfo"></span><button id="next" type="button">Weiter →</button></div></div>
   </section>
 </main>
+<dialog id="jsonModal">
+  <div class="modal-head"><span>Rohdaten</span><button id="closeJson" type="button" aria-label="Schließen">×</button></div>
+  <pre id="jsonModalContent"></pre>
+</dialog>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
-  const el = { upload: $('uploadArea'), input: $('fileInput'), viewer: $('viewer'), change: $('changeFile'), fileName: $('fileName'), search: $('search'), clearSearch: $('clearSearch'), pageSize: $('pageSize'), status: $('status'), body: $('logBody'), range: $('range'), pageInfo: $('pageInfo'), prev: $('prev'), next: $('next'), all: $('allLevels'), none: $('noLevels') };
+  const el = { upload: $('uploadArea'), input: $('fileInput'), viewer: $('viewer'), change: $('changeFile'), fileName: $('fileName'), search: $('search'), clearSearch: $('clearSearch'), pageSize: $('pageSize'), status: $('status'), body: $('logBody'), range: $('range'), pageInfo: $('pageInfo'), prev: $('prev'), next: $('next'), all: $('allLevels'), none: $('noLevels'), jsonModal: $('jsonModal'), jsonModalContent: $('jsonModalContent'), closeJson: $('closeJson') };
   const toggles = [...document.querySelectorAll('.level-toggle')];
   let rows = [], filtered = [], page = 1, currentFile = '';
   const activeLevels = new Set(['debug', 'info', 'warning', 'error', 'fatal']);
   const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const normalizeLevel = value => { const l = String(value ?? '').trim().toLowerCase(); if (l === 'information') return 'info'; if (l === 'warn') return 'warning'; if (l === 'err') return 'error'; if (l === 'verbose' || l === 'trace') return 'debug'; if (['debug','info','warning','error','fatal'].includes(l)) return l; return l || 'other'; };
+  const LEVEL_COLOR = { debug: 'var(--debug)', info: 'var(--info)', warning: 'var(--warning)', error: 'var(--error)', fatal: 'var(--fatal)', other: '#8d8d8d' };
   function highlighted(value, term) { const text = String(value ?? ''); if (!term) return escapeHtml(text); const lower = text.toLocaleLowerCase('de'); const needle = term.toLocaleLowerCase('de'); let output = '', from = 0, index; while ((index = lower.indexOf(needle, from)) !== -1) { output += escapeHtml(text.slice(from, index)) + '<mark>' + escapeHtml(text.slice(index, index + term.length)) + '</mark>'; from = index + term.length; } return output + escapeHtml(text.slice(from)); }
   function parseItem(item) { let inner = {}; if (typeof item?.line === 'string') { try { inner = JSON.parse(item.line); } catch { inner = { Message: item.line }; } } else if (item?.line && typeof item.line === 'object') inner = item.line; const rawLevel = item?.fields?.level ?? inner.Level ?? inner.level ?? item?.level ?? ''; return { message: String(inner.Message ?? inner.message ?? item?.Message ?? item?.message ?? ''), level: normalizeLevel(rawLevel), displayLevel: String(rawLevel || normalizeLevel(rawLevel)), context: String(inner.SourceContext ?? inner.source ?? item?.fields?.application ?? ''), timestamp: item?.timestamp ?? inner.Timestamp ?? item?.Timestamp ?? '', raw: item }; }
   function parseText(text) { text = text.replace(/^\uFEFF/, '').trim(); if (!text) return []; try { const value = JSON.parse(text); return Array.isArray(value) ? value : Array.isArray(value.logs) ? value.logs : [value]; } catch { const result = []; for (const [i, line] of text.split(/\r?\n/).entries()) { if (!line.trim()) continue; try { result.push(JSON.parse(line)); } catch { throw new Error(`Ungültiges JSON in Zeile ${i + 1}.`); } } return result; } }
-  function formatTime(value) { if (value === '' || value == null) return '—'; try { const s = String(value); let ms; if (/^\d+$/.test(s)) { const n = BigInt(s); ms = Number(s.length >= 16 ? n / 1000000n : s.length >= 13 ? n : s.length >= 10 ? n * 1000n : n); } else ms = Date.parse(s); if (!Number.isFinite(ms)) return s; return new Intl.DateTimeFormat('de-DE', { dateStyle: 'short', timeStyle: 'medium', fractionalSecondDigits: 3 }).format(new Date(ms)); } catch { return String(value); } }
+  function toMillis(value) { if (value === '' || value == null) return null; try { const s = String(value); let ms; if (/^\d+$/.test(s)) { const n = BigInt(s); ms = Number(s.length >= 16 ? n / 1000000n : s.length >= 13 ? n : s.length >= 10 ? n * 1000n : n); } else ms = Date.parse(s); return Number.isFinite(ms) ? ms : null; } catch { return null; } }
+  const TIME_FORMAT = new Intl.DateTimeFormat('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  function formatClock(value) { const ms = toMillis(value); if (ms === null) return value === '' || value == null ? '—' : String(value); return TIME_FORMAT.format(new Date(ms)); }
+  function formatDate(value) { const ms = toMillis(value); if (ms === null) return value === '' || value == null ? '—' : String(value); return new Intl.DateTimeFormat('de-DE', { dateStyle: 'full' }).format(new Date(ms)); }
   function applyFilters() { const term = el.search.value.trim(); filtered = rows.filter(row => activeLevels.has(row.level) && (!term || row.message.toLocaleLowerCase('de').includes(term.toLocaleLowerCase('de')))); page = 1; render(); }
-  function render() { const size = Number(el.pageSize.value); const pages = Math.max(1, Math.ceil(filtered.length / size)); page = Math.min(page, pages); const start = (page - 1) * size; const items = filtered.slice(start, start + size); const term = el.search.value.trim(); el.body.innerHTML = items.length ? items.map((row, i) => `<tr><td>${start + i + 1}</td><td title="${escapeHtml(row.timestamp)}">${escapeHtml(formatTime(row.timestamp))}</td><td><span class="level level-${escapeHtml(row.level)}">${escapeHtml(row.displayLevel || row.level)}</span></td><td class="message">${highlighted(row.message || '—', term)}${row.context ? `<div class="context">${escapeHtml(row.context)}</div>` : ''}</td><td><details><summary>JSON</summary><pre>${escapeHtml(JSON.stringify(row.raw, null, 2))}</pre></details></td></tr>`).join('') : '<tr><td colspan="5" class="empty">Keine passenden Logeinträge.</td></tr>'; el.range.textContent = filtered.length ? `${start + 1}–${Math.min(start + size, filtered.length)} von ${filtered.length}` : '0 Einträge'; el.pageInfo.textContent = `Seite ${page} / ${pages}`; el.prev.disabled = page <= 1; el.next.disabled = page >= pages; el.status.innerHTML = `<span><strong>${escapeHtml(currentFile)}</strong></span><span>${rows.length.toLocaleString('de-DE')} Einträge geladen</span><span>${filtered.length.toLocaleString('de-DE')} sichtbar</span>`; }
-  async function loadFile(file) { if (!file) return; try { el.status.textContent = 'Datei wird gelesen …'; const parsed = parseText(await file.text()); rows = parsed.map(parseItem); currentFile = file.name; el.fileName.textContent = file.name; el.fileName.title = file.name; el.upload.style.display = 'none'; el.viewer.style.display = 'block'; activeLevels.clear(); ['debug','info','warning','error','fatal'].forEach(level => activeLevels.add(level)); toggles.forEach(button => button.classList.remove('off')); el.search.value = ''; page = 1; applyFilters(); } catch (error) { el.upload.style.display = 'grid'; el.viewer.style.display = 'none'; alert(`Datei konnte nicht gelesen werden: ${error.message}`); } }
+  function render() { const size = Number(el.pageSize.value); const pages = Math.max(1, Math.ceil(filtered.length / size)); page = Math.min(page, pages); const start = (page - 1) * size; const items = filtered.slice(start, start + size); const term = el.search.value.trim(); el.body.innerHTML = items.length ? items.map((row, i) => `<tr style="--level-color:${LEVEL_COLOR[row.level] || LEVEL_COLOR.other}"><td title="${escapeHtml(row.displayLevel || row.level)}">${start + i + 1}</td><td title="${escapeHtml(formatDate(row.timestamp))}">${escapeHtml(formatClock(row.timestamp))}</td><td class="message">${highlighted(row.message || '—', term)}${row.context ? `<div class="context">${escapeHtml(row.context)}</div>` : ''}</td><td><button type="button" class="json-btn" data-row="${start + i}" title="Rohdaten anzeigen">{ }</button></td></tr>`).join('') : '<tr><td colspan="4" class="empty">Keine passenden Logeinträge.</td></tr>'; el.range.textContent = filtered.length ? `${start + 1}–${Math.min(start + size, filtered.length)} von ${filtered.length}` : '0 Einträge'; el.pageInfo.textContent = `Seite ${page} / ${pages}`; el.prev.disabled = page <= 1; el.next.disabled = page >= pages; el.status.innerHTML = `<span><strong>${escapeHtml(currentFile)}</strong></span><span>${rows.length.toLocaleString('de-DE')} Einträge geladen</span><span>${filtered.length.toLocaleString('de-DE')} sichtbar</span>`; }
+  async function loadFile(file) { if (!file) return; try { el.status.textContent = 'Datei wird gelesen …'; const parsed = parseText(await file.text()); rows = parsed.map(parseItem); currentFile = file.name; el.fileName.textContent = file.name; el.fileName.title = file.name; el.upload.style.display = 'none'; el.viewer.style.display = 'flex'; activeLevels.clear(); ['debug','info','warning','error','fatal'].forEach(level => activeLevels.add(level)); toggles.forEach(button => button.classList.remove('off')); el.search.value = ''; page = 1; applyFilters(); } catch (error) { el.upload.style.display = 'grid'; el.viewer.style.display = 'none'; alert(`Datei konnte nicht gelesen werden: ${error.message}`); } }
   function openPicker() { el.input.value = ''; el.input.click(); }
   el.upload.addEventListener('click', openPicker); el.upload.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openPicker(); } }); el.change.addEventListener('click', openPicker); el.input.addEventListener('change', event => loadFile(event.target.files[0]));
   ['dragenter','dragover'].forEach(name => el.upload.addEventListener(name, event => { event.preventDefault(); el.upload.classList.add('active'); })); ['dragleave','drop'].forEach(name => el.upload.addEventListener(name, event => { event.preventDefault(); el.upload.classList.remove('active'); })); el.upload.addEventListener('drop', event => loadFile(event.dataTransfer.files[0]));
   toggles.forEach(button => button.addEventListener('click', () => { const level = button.dataset.level; if (activeLevels.has(level)) { activeLevels.delete(level); button.classList.add('off'); } else { activeLevels.add(level); button.classList.remove('off'); } applyFilters(); }));
   el.all.addEventListener('click', () => { toggles.forEach(button => { activeLevels.add(button.dataset.level); button.classList.remove('off'); }); applyFilters(); }); el.none.addEventListener('click', () => { activeLevels.clear(); toggles.forEach(button => button.classList.add('off')); applyFilters(); });
   el.search.addEventListener('input', applyFilters); el.clearSearch.addEventListener('click', () => { el.search.value = ''; el.search.focus(); applyFilters(); }); el.pageSize.addEventListener('change', () => { page = 1; render(); }); el.prev.addEventListener('click', () => { if (page > 1) { page--; render(); } }); el.next.addEventListener('click', () => { if (page * Number(el.pageSize.value) < filtered.length) { page++; render(); } });
+  el.body.addEventListener('click', event => { const button = event.target.closest('.json-btn'); if (!button) return; const row = filtered[Number(button.dataset.row)]; if (!row) return; el.jsonModalContent.textContent = JSON.stringify(row.raw, null, 2); el.jsonModal.showModal(); });
+  el.closeJson.addEventListener('click', () => el.jsonModal.close());
+  el.jsonModal.addEventListener('click', event => { if (event.target === el.jsonModal) el.jsonModal.close(); });
 })();
 </script>
 </body>
