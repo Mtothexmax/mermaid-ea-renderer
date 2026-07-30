@@ -79,7 +79,6 @@
     .diagram .nodeLabel,
     .diagram .edgeLabel {
       font-family: "Segoe UI", Arial, sans-serif !important;
-      font-size: var(--diagram-font-size, 13px) !important;
       color: #1f2937 !important;
     }
 
@@ -224,38 +223,6 @@
     </div>
 
     <div class="flex items-center gap-0.5 shrink-0">
-        <button type="button" title="Diagramm einpassen" class="p-1.5 rounded hover:bg-white/10" @click="fitDiagram">
-            <span class="material-icons-round !text-[18px]">fit_screen</span>
-        </button>
-
-        <button type="button" title="Verkleinern" class="p-1.5 rounded hover:bg-white/10" @click="zoomOut">
-            <span class="material-icons-round !text-[18px]">zoom_out</span>
-        </button>
-
-        <span class="text-xs tabular-nums w-12 text-center">
-            {{ Math.round(zoom * 100) }}%
-        </span>
-
-        <button type="button" title="Vergrößern" class="p-1.5 rounded hover:bg-white/10" @click="zoomIn">
-            <span class="material-icons-round !text-[18px]">zoom_in</span>
-        </button>
-
-        <div class="h-5 w-px bg-white/20 mx-1.5"></div>
-
-        <button type="button" title="Schrift verkleinern" class="p-1.5 rounded hover:bg-white/10" @click="fontSizeOut">
-            <span class="material-icons-round !text-[18px]">text_decrease</span>
-        </button>
-
-        <span class="text-xs tabular-nums w-9 text-center">
-            {{ fontSize }}px
-        </span>
-
-        <button type="button" title="Schrift vergrößern" class="p-1.5 rounded hover:bg-white/10" @click="fontSizeIn">
-            <span class="material-icons-round !text-[18px]">text_increase</span>
-        </button>
-
-        <div class="h-5 w-px bg-white/20 mx-1.5"></div>
-
         <button type="button" :title="darkMode ? 'Helles Design' : 'Dunkles Design'" class="p-1.5 rounded hover:bg-white/10" @click="toggleDarkMode">
             <span class="material-icons-round !text-[18px]">{{ darkMode ? 'light_mode' : 'dark_mode' }}</span>
         </button>
@@ -278,14 +245,46 @@
 </header>
 
     <main class="flex-1 min-h-0 flex overflow-hidden">
-        <section class="flex-1 min-w-0 relative bg-white dark:bg-[#12161c]">
-        <div v-if="activeView === 'diagram'" ref="viewport" class="absolute inset-0 ea-grid overflow-auto"
+        <section class="flex-1 min-w-0 relative bg-white dark:bg-[#12161c] flex flex-col overflow-hidden">
+        <div v-if="activeView === 'diagram'" class="h-10 shrink-0 border-b border-slate-300 dark:border-slate-700 bg-[#e8ebee] dark:bg-[#1a1f27] flex items-center justify-center gap-0.5 px-3">
+            <button type="button" title="Diagramm einpassen" class="p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300" @click="fitDiagram">
+                <span class="material-icons-round !text-[18px]">fit_screen</span>
+            </button>
+
+            <button type="button" title="Verkleinern" class="p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300" @click="zoomOut">
+                <span class="material-icons-round !text-[18px]">zoom_out</span>
+            </button>
+
+            <button type="button" title="Standard-Zoom" class="text-xs tabular-nums w-12 text-center py-1 rounded hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200" @click="resetZoom">
+                {{ Math.round(zoom * 100) }}%
+            </button>
+
+            <button type="button" title="Vergrößern" class="p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300" @click="zoomIn">
+                <span class="material-icons-round !text-[18px]">zoom_in</span>
+            </button>
+
+            <div class="h-5 w-px bg-slate-300 dark:bg-slate-600 mx-1.5"></div>
+
+            <button type="button" title="Schrift verkleinern" class="p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300" @click="fontSizeOut">
+                <span class="material-icons-round !text-[18px]">text_decrease</span>
+            </button>
+
+            <button type="button" title="Standard-Schriftgröße" class="text-xs tabular-nums w-9 text-center py-1 rounded hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200" @click="resetFontSize">
+                {{ fontSize }}px
+            </button>
+
+            <button type="button" title="Schrift vergrößern" class="p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300" @click="fontSizeIn">
+                <span class="material-icons-round !text-[18px]">text_increase</span>
+            </button>
+        </div>
+
+        <div v-if="activeView === 'diagram'" ref="viewport" class="flex-1 min-h-0 ea-grid overflow-auto"
             @wheel="onWheel" @mousedown="startPan">
             <div class="min-w-full min-h-full p-10 flex items-start">
             <div ref="diagramEl" class="diagram mx-auto"></div>
             </div>
             </div>
-<div v-else class="absolute inset-0 flex flex-col bg-[#1e2935]">
+<div v-else class="flex-1 min-h-0 flex flex-col bg-[#1e2935]">
     <div class="h-9 px-3 flex items-center text-xs text-slate-300 border-b border-slate-600">
         <span class="material-icons-round !text-[16px] mr-2">
             description
@@ -1105,6 +1104,10 @@ NoteEnd --- End`;
                 zoomAtCenter(1 / 1.15);
             }
 
+            function resetZoom() {
+                zoom.value = clampZoom(1);
+            }
+
             function fontSizeIn() {
                 fontSize.value = Math.min(32, fontSize.value + 1);
             }
@@ -1113,13 +1116,8 @@ NoteEnd --- End`;
                 fontSize.value = Math.max(8, fontSize.value - 1);
             }
 
-            function applyFontSize(value) {
-                if (diagramEl.value) {
-                    diagramEl.value.style.setProperty(
-                        "--diagram-font-size",
-                        value + "px"
-                    );
-                }
+            function resetFontSize() {
+                fontSize.value = 13;
             }
 
             function onWheel(event) {
@@ -1240,12 +1238,14 @@ NoteEnd --- End`;
                         curve: "linear",
                         htmlLabels: true,
                         nodeSpacing: 38,
-                        rankSpacing: 56
+                        rankSpacing: 56,
+                        padding: 8
                     },
                     themeVariables: darkMode.value
                         ? {
                             fontFamily:
                                 "Segoe UI, Arial, sans-serif",
+                            fontSize: fontSize.value + "px",
                             primaryColor: "#2a2f3a",
                             primaryTextColor: "#e2e8f0",
                             primaryBorderColor: "#8a93a3",
@@ -1258,6 +1258,7 @@ NoteEnd --- End`;
                         : {
                             fontFamily:
                                 "Segoe UI, Arial, sans-serif",
+                            fontSize: fontSize.value + "px",
                             primaryColor: "#fffdf3",
                             primaryTextColor: "#1f2937",
                             primaryBorderColor: "#4d5966",
@@ -1298,7 +1299,11 @@ NoteEnd --- End`;
 
             watch(fontSize, value => {
                 localStorage.setItem("mermaidRendererFontSize", value);
-                applyFontSize(value);
+                initMermaid();
+
+                if (activeView.value === "diagram") {
+                    renderDiagram();
+                }
             });
 
             watch(source, value => {
@@ -1307,7 +1312,6 @@ NoteEnd --- End`;
 
             onMounted(() => {
                 applyDarkClass(darkMode.value);
-                applyFontSize(fontSize.value);
 
                 if (
                     typeof mermaid === "undefined"
@@ -1349,9 +1353,11 @@ NoteEnd --- End`;
                 copyCurrentNote,
                 zoomIn,
                 zoomOut,
+                resetZoom,
                 fontSize,
                 fontSizeIn,
                 fontSizeOut,
+                resetFontSize,
                 onWheel,
                 fitDiagram,
                 startPan,
