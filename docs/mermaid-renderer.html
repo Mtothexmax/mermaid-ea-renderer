@@ -79,7 +79,7 @@
     .diagram .nodeLabel,
     .diagram .edgeLabel {
       font-family: "Segoe UI", Arial, sans-serif !important;
-      font-size: 13px !important;
+      font-size: var(--diagram-font-size, 13px) !important;
       color: #1f2937 !important;
     }
 
@@ -238,6 +238,20 @@
 
         <button type="button" title="Vergrößern" class="p-1.5 rounded hover:bg-white/10" @click="zoomIn">
             <span class="material-icons-round !text-[18px]">zoom_in</span>
+        </button>
+
+        <div class="h-5 w-px bg-white/20 mx-1.5"></div>
+
+        <button type="button" title="Schrift verkleinern" class="p-1.5 rounded hover:bg-white/10" @click="fontSizeOut">
+            <span class="material-icons-round !text-[18px]">text_decrease</span>
+        </button>
+
+        <span class="text-xs tabular-nums w-9 text-center">
+            {{ fontSize }}px
+        </span>
+
+        <button type="button" title="Schrift vergrößern" class="p-1.5 rounded hover:bg-white/10" @click="fontSizeIn">
+            <span class="material-icons-round !text-[18px]">text_increase</span>
         </button>
 
         <div class="h-5 w-px bg-white/20 mx-1.5"></div>
@@ -484,6 +498,9 @@ NoteEnd --- End`;
             const toast = ref("");
             const darkMode = ref(
                 localStorage.getItem("mermaidRendererDarkMode") === "1"
+            );
+            const fontSize = ref(
+                Number(localStorage.getItem("mermaidRendererFontSize")) || 13
             );
 
             const splitLines = value => value.split(NL);
@@ -1088,6 +1105,23 @@ NoteEnd --- End`;
                 zoomAtCenter(1 / 1.15);
             }
 
+            function fontSizeIn() {
+                fontSize.value = Math.min(32, fontSize.value + 1);
+            }
+
+            function fontSizeOut() {
+                fontSize.value = Math.max(8, fontSize.value - 1);
+            }
+
+            function applyFontSize(value) {
+                if (diagramEl.value) {
+                    diagramEl.value.style.setProperty(
+                        "--diagram-font-size",
+                        value + "px"
+                    );
+                }
+            }
+
             function onWheel(event) {
                 if (!event.ctrlKey) {
                     return;
@@ -1262,12 +1296,18 @@ NoteEnd --- End`;
 
             watch(zoom, applyZoomToSvg);
 
+            watch(fontSize, value => {
+                localStorage.setItem("mermaidRendererFontSize", value);
+                applyFontSize(value);
+            });
+
             watch(source, value => {
                 localStorage.setItem("mermaidRendererSource", value);
             });
 
             onMounted(() => {
                 applyDarkClass(darkMode.value);
+                applyFontSize(fontSize.value);
 
                 if (
                     typeof mermaid === "undefined"
@@ -1309,6 +1349,9 @@ NoteEnd --- End`;
                 copyCurrentNote,
                 zoomIn,
                 zoomOut,
+                fontSize,
+                fontSizeIn,
+                fontSizeOut,
                 onWheel,
                 fitDiagram,
                 startPan,
