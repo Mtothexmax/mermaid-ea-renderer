@@ -247,33 +247,33 @@
     <main class="flex-1 min-h-0 flex overflow-hidden">
         <section class="flex-1 min-w-0 relative bg-white dark:bg-[#12161c] flex flex-col overflow-hidden">
         <div v-if="activeView === 'diagram'" class="h-10 shrink-0 border-b border-slate-300 dark:border-slate-700 bg-[#e8ebee] dark:bg-[#1a1f27] flex items-center justify-center gap-0.5 px-3">
-            <button type="button" title="Diagramm einpassen" class="p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300" @click="fitDiagram">
+            <button type="button" title="Diagramm einpassen" class="inline-flex items-center justify-center p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300" @click="fitDiagram">
                 <span class="material-icons-round !text-[18px]">fit_screen</span>
             </button>
 
-            <button type="button" title="Verkleinern" class="p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300" @click="zoomOut">
+            <button type="button" title="Verkleinern" class="inline-flex items-center justify-center p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300" @click="zoomOut">
                 <span class="material-icons-round !text-[18px]">zoom_out</span>
             </button>
 
-            <button type="button" title="Standard-Zoom" class="text-xs tabular-nums w-12 text-center py-1 rounded hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200" @click="resetZoom">
+            <button type="button" title="Standard-Zoom" class="inline-flex items-center justify-center w-12 p-1.5 leading-[18px] rounded hover:bg-black/5 dark:hover:bg-white/10 text-xs tabular-nums text-slate-700 dark:text-slate-200" @click="resetZoom">
                 {{ Math.round(zoom * 100) }}%
             </button>
 
-            <button type="button" title="Vergrößern" class="p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300" @click="zoomIn">
+            <button type="button" title="Vergrößern" class="inline-flex items-center justify-center p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300" @click="zoomIn">
                 <span class="material-icons-round !text-[18px]">zoom_in</span>
             </button>
 
             <div class="h-5 w-px bg-slate-300 dark:bg-slate-600 mx-1.5"></div>
 
-            <button type="button" title="Schrift verkleinern" class="p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300" @click="fontSizeOut">
+            <button type="button" title="Schrift verkleinern" class="inline-flex items-center justify-center p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300" @click="fontSizeOut">
                 <span class="material-icons-round !text-[18px]">text_decrease</span>
             </button>
 
-            <button type="button" title="Standard-Schriftgröße" class="text-xs tabular-nums w-9 text-center py-1 rounded hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200" @click="resetFontSize">
+            <button type="button" title="Standard-Schriftgröße" class="inline-flex items-center justify-center w-9 p-1.5 leading-[18px] rounded hover:bg-black/5 dark:hover:bg-white/10 text-xs tabular-nums text-slate-700 dark:text-slate-200" @click="resetFontSize">
                 {{ fontSize }}px
             </button>
 
-            <button type="button" title="Schrift vergrößern" class="p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300" @click="fontSizeIn">
+            <button type="button" title="Schrift vergrößern" class="inline-flex items-center justify-center p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300" @click="fontSizeIn">
                 <span class="material-icons-round !text-[18px]">text_increase</span>
             </button>
         </div>
@@ -491,7 +491,9 @@ NoteEnd --- End`;
             const search = ref("");
             const notes = ref([]);
             const selectedId = ref("");
-            const showNoteList = ref(true);
+            const showNoteList = ref(
+                localStorage.getItem("mermaidRendererShowNoteList") !== "0"
+            );
             const dirty = ref(false);
             const error = ref("");
             const toast = ref("");
@@ -1304,6 +1306,13 @@ NoteEnd --- End`;
                 if (activeView.value === "diagram") {
                     renderDiagram();
                 }
+            });
+
+            watch(showNoteList, value => {
+                localStorage.setItem(
+                    "mermaidRendererShowNoteList",
+                    value ? "1" : "0"
+                );
             });
 
             watch(source, value => {
