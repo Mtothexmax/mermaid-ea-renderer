@@ -155,6 +155,24 @@
       filter: drop-shadow(0 0 4px rgba(0, 95, 184, 0.3));
     }
 
+    .diagram g.node.missing-note rect,
+    .diagram g.node.missing-note polygon,
+    .diagram g.node.missing-note circle,
+    .diagram g.node.missing-note ellipse,
+    .diagram g.node.missing-note path {
+      stroke: #dc2626 !important;
+      stroke-width: 2.5px !important;
+      filter: drop-shadow(0 0 4px rgba(220, 38, 38, 0.35));
+    }
+
+    .dark .diagram g.node.missing-note rect,
+    .dark .diagram g.node.missing-note polygon,
+    .dark .diagram g.node.missing-note circle,
+    .dark .diagram g.node.missing-note ellipse,
+    .dark .diagram g.node.missing-note path {
+      stroke: #f87171 !important;
+    }
+
     textarea {
       scrollbar-width: thin;
     }
@@ -198,6 +216,14 @@
         <span class="text-[10px] text-slate-300 tabular-nums whitespace-nowrap">
             {{ nodeCount }} Elemente · {{ noteEntries.length }} Notizen
         </span>
+
+        <button v-if="missingNoteIds.length" type="button"
+            class="text-[10px] tabular-nums whitespace-nowrap"
+            :class="highlightMissingNotes ? 'text-red-300 underline' : 'text-red-300/80 hover:text-red-300 hover:underline'"
+            :title="highlightMissingNotes ? 'Hervorhebung ausblenden' : 'Elemente ohne Notiz im Diagramm hervorheben'"
+            @click="toggleMissingNotesHighlight">
+            · {{ missingNoteIds.length }} ohne Notiz
+        </button>
         </div>
 
     <div class="flex-1 flex justify-center min-w-0">
@@ -497,6 +523,7 @@ NoteEnd --- End`;
             const dirty = ref(false);
             const error = ref("");
             const toast = ref("");
+            const highlightMissingNotes = ref(false);
             const darkMode = ref(
                 localStorage.getItem("mermaidRendererDarkMode") === "1"
             );
@@ -699,7 +726,7 @@ NoteEnd --- End`;
                     .join(NL);
         }
 
-            const nodeCount = computed(() => {
+            const allNodeIds = computed(() => {
                 const ids = new Set();
 
                 splitLines(stripNotes(source.value)).forEach(line => {
@@ -717,8 +744,20 @@ NoteEnd --- End`;
                     }
           });
 
-            return ids.size;
+            return ids;
         });
+
+            const nodeCount = computed(() => allNodeIds.value.size);
+
+            const missingNoteIds = computed(() => {
+                return [...allNodeIds.value].filter(id => {
+                    const note = notes.value.find(
+                        item => item.nodeId === id
+                    );
+
+                    return !note || !note.text.trim();
+                });
+            });
 
             const noteEntries = computed(() => notes.value);
 
@@ -802,6 +841,8 @@ NoteEnd --- End`;
                                 selectNote(id);
                             });
                         });
+
+                    applyMissingNoteHighlight();
                 } catch (exception) {
                     error.value =
                         exception && exception.message
@@ -840,6 +881,33 @@ NoteEnd --- End`;
                             );
                         });
                 });
+            }
+
+            function toggleMissingNotesHighlight() {
+                highlightMissingNotes.value = !highlightMissingNotes.value;
+                applyMissingNoteHighlight();
+            }
+
+            function applyMissingNoteHighlight() {
+                if (!diagramEl.value) {
+                    return;
+                }
+
+                const missing = new Set(missingNoteIds.value);
+
+                diagramEl.value
+                    .querySelectorAll("g.node")
+                    .forEach(node => {
+                        const id = (node.id || "")
+                            .split("flowchart-")
+                            .pop()
+                            .replace(/-\d+$/, "");
+
+                        node.classList.toggle(
+                            "missing-note",
+                            highlightMissingNotes.value && missing.has(id)
+                        );
+                    });
             }
 
             function escapeNote(value) {
@@ -1319,6 +1387,12 @@ NoteEnd --- End`;
                 localStorage.setItem("mermaidRendererSource", value);
             });
 
+            watch(missingNoteIds, () => {
+                if (highlightMissingNotes.value) {
+                    applyMissingNoteHighlight();
+                }
+            });
+
             onMounted(() => {
                 applyDarkClass(darkMode.value);
 
@@ -1352,6 +1426,9 @@ NoteEnd --- End`;
                 toggleDarkMode,
                 nodeCount,
                 noteEntries,
+                missingNoteIds,
+                highlightMissingNotes,
+                toggleMissingNotesHighlight,
                 selectedNote,
                 filteredNotes,
                 renderDiagram,

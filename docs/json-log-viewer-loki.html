@@ -25,10 +25,12 @@
     * { box-sizing: border-box; }
     html, body { height: 100%; overflow: hidden; }
     body { display: flex; flex-direction: column; margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 Inter, system-ui, -apple-system, "Segoe UI", sans-serif; }
-    header { flex-shrink: 0; display: flex; align-items: center; gap: 14px; padding: 15px 22px; border-bottom: 1px solid var(--border); background: #080808; box-shadow: 0 2px 14px #000; }
+    header { flex-shrink: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 12px 22px; border-bottom: 1px solid var(--border); background: #080808; box-shadow: 0 2px 14px #000; }
     .logo { width: 8px; height: 34px; border-radius: 3px; background: var(--yellow); box-shadow: 0 0 16px #f2cc0c55; }
+    .brand { display: flex; align-items: center; gap: 14px; }
     h1 { margin: 0; font-size: 19px; font-weight: 600; }
     .subtitle { color: var(--muted); font-size: 12px; }
+    #headerControls { display: none; align-items: center; flex-wrap: wrap; gap: 8px 14px; }
     main { flex: 1; min-height: 0; display: flex; flex-direction: column; max-width: 1900px; width: 100%; margin: auto; padding: 18px 22px 28px; overflow: hidden; }
     #uploadArea { display: grid; place-items: center; min-height: 260px; padding: 30px; border: 1px dashed #5b520d; border-radius: 6px; background: linear-gradient(180deg, #111, #0d0d0d); cursor: pointer; transition: .15s; }
     #uploadArea:hover, #uploadArea.active { border-color: var(--yellow); background: #151407; }
@@ -43,15 +45,15 @@
     button { padding: 6px 11px; cursor: pointer; }
     button:hover { border-color: #686868; background: var(--panel-3); }
     button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--yellow); outline-offset: 1px; }
-    .file-name { max-width: 330px; padding: 0 5px; overflow: hidden; color: #d0d0d0; text-overflow: ellipsis; white-space: nowrap; }
-    .change-file { border-color: #6a5b00; color: var(--yellow); }
+    .file-name { max-width: 260px; padding: 0 5px; overflow: hidden; color: #d0d0d0; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+    .change-file { min-height: 26px; padding: 4px 9px; border-color: #6a5b00; color: var(--yellow); font-size: 12px; }
     .search-wrap { position: relative; flex: 1; min-width: 260px; }
     #search { width: 100%; padding: 7px 33px 7px 10px; }
     #clearSearch { position: absolute; top: 3px; right: 3px; min-height: 28px; padding: 2px 8px; border: 0; color: var(--muted); background: transparent; }
     select { padding: 6px 9px; }
-    .filters { display: flex; flex-wrap: wrap; gap: 7px; margin: 12px 0; }
-    .level-toggle { position: relative; min-width: 92px; padding: 7px 12px 7px 28px; border-color: #363636; color: #d0d0d0; text-align: left; text-transform: uppercase; }
-    .level-toggle::before { position: absolute; top: 50%; left: 11px; width: 8px; height: 8px; border-radius: 50%; background: currentColor; content: ""; transform: translateY(-50%); }
+    .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
+    .level-toggle { position: relative; min-width: 0; min-height: 24px; padding: 4px 10px 4px 20px; border-color: #363636; color: #d0d0d0; font-size: 11px; text-align: left; text-transform: uppercase; }
+    .level-toggle::before { position: absolute; top: 50%; left: 8px; width: 6px; height: 6px; border-radius: 50%; background: currentColor; content: ""; transform: translateY(-50%); }
     .level-toggle[data-level=debug] { color: var(--debug); }
     .level-toggle[data-level=info] { color: var(--info); }
     .level-toggle[data-level=warning] { color: var(--warning); }
@@ -59,26 +61,25 @@
     .level-toggle[data-level=fatal] { color: var(--fatal); }
     .level-toggle.off { color: #565656; opacity: .72; text-decoration: line-through; }
     .level-toggle:not(.off) { background: #1c1c1c; box-shadow: inset 0 -2px currentColor; }
-    .filter-actions { margin-left: 3px; color: var(--muted); }
-    .filters, .status { flex-shrink: 0; }
-    .status { display: flex; flex-wrap: wrap; gap: 18px; min-height: 22px; margin: 7px 1px 10px; color: var(--muted); font-size: 12px; }
-    .status strong { color: var(--yellow); font-weight: 500; }
+    .filter-actions { min-height: 24px; padding: 4px 8px; margin-left: 3px; color: var(--muted); font-size: 11px; }
+    .visible-count { flex-shrink: 0; color: var(--muted); font-size: 12px; white-space: nowrap; }
     .error-text { color: var(--error); }
     .table-wrap { flex: 1; min-height: 0; overflow: auto; border: 1px solid var(--border); border-radius: 4px; background: var(--panel); }
     table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-    th { position: sticky; top: 0; z-index: 2; padding: 8px 11px; border-bottom: 1px solid #464646; background: #171717; color: #bdbdbd; text-align: left; font-size: 12px; font-weight: 500; }
-    td { padding: 7px 11px; border-bottom: 1px solid #242424; vertical-align: top; }
+    th { position: sticky; top: 0; z-index: 2; padding: 6px 11px; border-bottom: 1px solid #464646; background: #171717; color: #bdbdbd; text-align: left; font-size: 12px; font-weight: 500; }
+    td { padding: 3px 11px; border-bottom: 1px solid #242424; vertical-align: top; }
     tbody tr:hover { background: #191919; }
-    th:nth-child(1), td:nth-child(1) { width: 60px; color: #747474; }
-    th:nth-child(2), td:nth-child(2) { width: 110px; }
-    th:nth-child(4), td:nth-child(4) { width: 56px; }
+    th:nth-child(1), td:nth-child(1) { width: 100px; }
+    th:nth-child(3), td:nth-child(3) { width: 34px; }
     tbody td:first-child { border-left: 4px solid var(--level-color, transparent); }
+    .secs { color: #6b6b6b; }
     td.message { color: #e5e5e5; font-family: "Cascadia Mono", "SFMono-Regular", Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
-    .context { margin-top: 3px; color: #727272; font-family: inherit; font-size: 11px; }
+    .context { margin-top: 2px; color: #727272; font-family: inherit; font-size: 11px; }
     td[title] { cursor: help; }
     mark { padding: 0 2px; border-radius: 2px; background: var(--yellow); color: #111; box-shadow: 0 0 0 1px var(--yellow-dark); }
-    .json-btn { min-height: auto; padding: 3px 8px; border-color: var(--border); color: var(--muted); font-size: 11px; font-family: "Cascadia Mono", "SFMono-Regular", Consolas, monospace; background: transparent; }
+    .json-btn { display: inline-flex; align-items: center; justify-content: center; min-height: auto; width: 24px; height: 24px; padding: 0; border-color: var(--border); color: var(--muted); background: transparent; }
     .json-btn:hover { color: var(--yellow); border-color: var(--yellow-dark); background: var(--panel-3); }
+    .json-btn svg { width: 13px; height: 13px; }
     .empty { padding: 55px; color: var(--muted); text-align: center; }
     #jsonModal { width: min(900px, 90vw); max-height: 80vh; padding: 0; border: 1px solid var(--border); border-radius: 6px; background: var(--panel); color: var(--text); }
     #jsonModal::backdrop { background: rgba(0, 0, 0, .6); }
@@ -89,24 +90,15 @@
     .pager { flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 10px; color: var(--muted); font-size: 12px; }
     .pager-controls { display: flex; align-items: center; gap: 8px; }
     button:disabled { cursor: default; opacity: .35; }
-    @media (max-width: 850px) { main, header { padding-left: 10px; padding-right: 10px; } th:nth-child(2), td:nth-child(2) { width: 130px; } th:nth-child(3), td:nth-child(3) { width: 600px; } .pager { align-items: flex-start; flex-direction: column; } }
+    @media (max-width: 850px) { main, header { padding-left: 10px; padding-right: 10px; } th:nth-child(1), td:nth-child(1) { width: 80px; } th:nth-child(2), td:nth-child(2) { width: 600px; } .pager { align-items: flex-start; flex-direction: column; } }
   </style>
 </head>
 <body>
-<header><div class="logo"></div><div><h1>JSON Log Viewer</h1><div class="subtitle">Lokale Log-Analyse im Loki-inspirierten Design</div></div></header>
-<main>
-  <section id="uploadArea" role="button" tabindex="0" aria-label="JSON-Datei auswählen">
-    <div class="upload-inner"><div class="upload-icon">⬆</div><div class="upload-title">JSON-Logdatei auswählen</div><div class="upload-note">Hier ablegen oder klicken · JSON, JSONL und NDJSON · Verarbeitung nur im Browser</div></div>
-  </section>
-  <input id="fileInput" type="file" accept=".json,.jsonl,.ndjson,application/json">
-
-  <section id="viewer">
-    <div class="toolbar">
-      <button id="changeFile" class="change-file" type="button">Andere Datei</button>
-      <span id="fileName" class="file-name"></span>
-      <div class="search-wrap"><input id="search" type="search" placeholder="Messages durchsuchen und Treffer markieren …"><button id="clearSearch" type="button" title="Suche leeren">×</button></div>
-      <label>Zeilen <select id="pageSize"><option>1000</option><option>5000</option><option selected>10000</option><option>25000</option><option>50000</option></select></label>
-    </div>
+<header>
+  <div class="brand"><div class="logo"></div><div><h1>JSON Log Viewer</h1><div class="subtitle">Lokale Log-Analyse im Loki-inspirierten Design</div></div></div>
+  <div id="headerControls">
+    <button id="changeFile" class="change-file" type="button">Andere Datei</button>
+    <span id="fileName" class="file-name"></span>
     <div class="filters" aria-label="Log-Level-Filter">
       <button class="level-toggle" data-level="debug" type="button">Debug</button>
       <button class="level-toggle" data-level="info" type="button">Info</button>
@@ -116,11 +108,24 @@
       <button id="allLevels" class="filter-actions" type="button">Alle</button>
       <button id="noLevels" class="filter-actions" type="button">Keine</button>
     </div>
-    <div id="status" class="status"></div>
-    <div class="table-wrap">
-      <table><thead><tr><th>#</th><th>Zeit</th><th>Message</th><th>Details</th></tr></thead><tbody id="logBody"></tbody></table>
+  </div>
+</header>
+<main>
+  <section id="uploadArea" role="button" tabindex="0" aria-label="JSON-Datei auswählen">
+    <div class="upload-inner"><div class="upload-icon">⬆</div><div class="upload-title">JSON-Logdatei auswählen</div><div class="upload-note">Hier ablegen oder klicken · JSON, JSONL und NDJSON · Verarbeitung nur im Browser</div></div>
+  </section>
+  <input id="fileInput" type="file" accept=".json,.jsonl,.ndjson,application/json">
+
+  <section id="viewer">
+    <div class="toolbar">
+      <div class="search-wrap"><input id="search" type="search" placeholder="Messages durchsuchen und Treffer markieren …"><button id="clearSearch" type="button" title="Suche leeren">×</button></div>
+      <label>Zeilen <select id="pageSize"><option>1000</option><option>5000</option><option selected>10000</option><option>25000</option><option>50000</option></select></label>
+      <span id="visibleCount" class="visible-count"></span>
     </div>
-    <div class="pager"><span id="range"></span><div class="pager-controls"><button id="prev" type="button">← Zurück</button><span id="pageInfo"></span><button id="next" type="button">Weiter →</button></div></div>
+    <div class="table-wrap">
+      <table><thead><tr><th>Zeit</th><th>Message</th><th>Details</th></tr></thead><tbody id="logBody"></tbody></table>
+    </div>
+    <div id="pager" class="pager"><span id="range"></span><div class="pager-controls"><button id="prev" type="button">← Zurück</button><span id="pageInfo"></span><button id="next" type="button">Weiter →</button></div></div>
   </section>
 </main>
 <dialog id="jsonModal">
@@ -130,7 +135,7 @@
 <script>
 (() => {
   const $ = id => document.getElementById(id);
-  const el = { upload: $('uploadArea'), input: $('fileInput'), viewer: $('viewer'), change: $('changeFile'), fileName: $('fileName'), search: $('search'), clearSearch: $('clearSearch'), pageSize: $('pageSize'), status: $('status'), body: $('logBody'), range: $('range'), pageInfo: $('pageInfo'), prev: $('prev'), next: $('next'), all: $('allLevels'), none: $('noLevels'), jsonModal: $('jsonModal'), jsonModalContent: $('jsonModalContent'), closeJson: $('closeJson') };
+  const el = { upload: $('uploadArea'), input: $('fileInput'), viewer: $('viewer'), headerControls: $('headerControls'), change: $('changeFile'), fileName: $('fileName'), search: $('search'), clearSearch: $('clearSearch'), pageSize: $('pageSize'), visibleCount: $('visibleCount'), body: $('logBody'), pager: $('pager'), range: $('range'), pageInfo: $('pageInfo'), prev: $('prev'), next: $('next'), all: $('allLevels'), none: $('noLevels'), jsonModal: $('jsonModal'), jsonModalContent: $('jsonModalContent'), closeJson: $('closeJson') };
   const toggles = [...document.querySelectorAll('.level-toggle')];
   let rows = [], filtered = [], page = 1, currentFile = '';
   const activeLevels = new Set(['debug', 'info', 'warning', 'error', 'fatal']);
@@ -142,11 +147,12 @@
   function parseText(text) { text = text.replace(/^\uFEFF/, '').trim(); if (!text) return []; try { const value = JSON.parse(text); return Array.isArray(value) ? value : Array.isArray(value.logs) ? value.logs : [value]; } catch { const result = []; for (const [i, line] of text.split(/\r?\n/).entries()) { if (!line.trim()) continue; try { result.push(JSON.parse(line)); } catch { throw new Error(`Ungültiges JSON in Zeile ${i + 1}.`); } } return result; } }
   function toMillis(value) { if (value === '' || value == null) return null; try { const s = String(value); let ms; if (/^\d+$/.test(s)) { const n = BigInt(s); ms = Number(s.length >= 16 ? n / 1000000n : s.length >= 13 ? n : s.length >= 10 ? n * 1000n : n); } else ms = Date.parse(s); return Number.isFinite(ms) ? ms : null; } catch { return null; } }
   const TIME_FORMAT = new Intl.DateTimeFormat('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  function formatClock(value) { const ms = toMillis(value); if (ms === null) return value === '' || value == null ? '—' : String(value); return TIME_FORMAT.format(new Date(ms)); }
+  const JSON_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>';
+  function formatClockHtml(value) { const ms = toMillis(value); if (ms === null) return escapeHtml(value === '' || value == null ? '—' : String(value)); return TIME_FORMAT.formatToParts(new Date(ms)).map(part => part.type === 'second' ? `<span class="secs">${escapeHtml(part.value)}</span>` : escapeHtml(part.value)).join(''); }
   function formatDate(value) { const ms = toMillis(value); if (ms === null) return value === '' || value == null ? '—' : String(value); return new Intl.DateTimeFormat('de-DE', { dateStyle: 'full' }).format(new Date(ms)); }
   function applyFilters() { const term = el.search.value.trim(); filtered = rows.filter(row => activeLevels.has(row.level) && (!term || row.message.toLocaleLowerCase('de').includes(term.toLocaleLowerCase('de')))); page = 1; render(); }
-  function render() { const size = Number(el.pageSize.value); const pages = Math.max(1, Math.ceil(filtered.length / size)); page = Math.min(page, pages); const start = (page - 1) * size; const items = filtered.slice(start, start + size); const term = el.search.value.trim(); el.body.innerHTML = items.length ? items.map((row, i) => `<tr style="--level-color:${LEVEL_COLOR[row.level] || LEVEL_COLOR.other}"><td title="${escapeHtml(row.displayLevel || row.level)}">${start + i + 1}</td><td title="${escapeHtml(formatDate(row.timestamp))}">${escapeHtml(formatClock(row.timestamp))}</td><td class="message">${highlighted(row.message || '—', term)}${row.context ? `<div class="context">${escapeHtml(row.context)}</div>` : ''}</td><td><button type="button" class="json-btn" data-row="${start + i}" title="Rohdaten anzeigen">{ }</button></td></tr>`).join('') : '<tr><td colspan="4" class="empty">Keine passenden Logeinträge.</td></tr>'; el.range.textContent = filtered.length ? `${start + 1}–${Math.min(start + size, filtered.length)} von ${filtered.length}` : '0 Einträge'; el.pageInfo.textContent = `Seite ${page} / ${pages}`; el.prev.disabled = page <= 1; el.next.disabled = page >= pages; el.status.innerHTML = `<span><strong>${escapeHtml(currentFile)}</strong></span><span>${rows.length.toLocaleString('de-DE')} Einträge geladen</span><span>${filtered.length.toLocaleString('de-DE')} sichtbar</span>`; }
-  async function loadFile(file) { if (!file) return; try { el.status.textContent = 'Datei wird gelesen …'; const parsed = parseText(await file.text()); rows = parsed.map(parseItem); currentFile = file.name; el.fileName.textContent = file.name; el.fileName.title = file.name; el.upload.style.display = 'none'; el.viewer.style.display = 'flex'; activeLevels.clear(); ['debug','info','warning','error','fatal'].forEach(level => activeLevels.add(level)); toggles.forEach(button => button.classList.remove('off')); el.search.value = ''; page = 1; applyFilters(); } catch (error) { el.upload.style.display = 'grid'; el.viewer.style.display = 'none'; alert(`Datei konnte nicht gelesen werden: ${error.message}`); } }
+  function render() { const size = Number(el.pageSize.value); const pages = Math.max(1, Math.ceil(filtered.length / size)); page = Math.min(page, pages); const start = (page - 1) * size; const items = filtered.slice(start, start + size); const term = el.search.value.trim(); el.body.innerHTML = items.length ? items.map((row, i) => `<tr style="--level-color:${LEVEL_COLOR[row.level] || LEVEL_COLOR.other}"><td title="${escapeHtml(row.displayLevel || row.level)} · ${escapeHtml(formatDate(row.timestamp))}">${formatClockHtml(row.timestamp)}</td><td class="message">${highlighted(row.message || '—', term)}${row.context ? `<div class="context">${escapeHtml(row.context)}</div>` : ''}</td><td><button type="button" class="json-btn" data-row="${start + i}" title="Rohdaten anzeigen" aria-label="Rohdaten anzeigen">${JSON_ICON}</button></td></tr>`).join('') : '<tr><td colspan="3" class="empty">Keine passenden Logeinträge.</td></tr>'; const showPager = pages > 1; el.pager.style.display = showPager ? 'flex' : 'none'; if (showPager) { el.range.textContent = `${start + 1}–${Math.min(start + size, filtered.length)} von ${filtered.length}`; el.pageInfo.textContent = `Seite ${page} / ${pages}`; el.prev.disabled = page <= 1; el.next.disabled = page >= pages; } el.visibleCount.textContent = filtered.length === rows.length ? `${filtered.length.toLocaleString('de-DE')} Einträge` : `${filtered.length.toLocaleString('de-DE')} von ${rows.length.toLocaleString('de-DE')} sichtbar`; }
+  async function loadFile(file) { if (!file) return; try { const parsed = parseText(await file.text()); rows = parsed.map(parseItem); currentFile = file.name; el.fileName.textContent = file.name; el.fileName.title = file.name; el.upload.style.display = 'none'; el.viewer.style.display = 'flex'; el.headerControls.style.display = 'flex'; activeLevels.clear(); ['debug','info','warning','error','fatal'].forEach(level => activeLevels.add(level)); toggles.forEach(button => button.classList.remove('off')); el.search.value = ''; page = 1; applyFilters(); } catch (error) { el.upload.style.display = 'grid'; el.viewer.style.display = 'none'; el.headerControls.style.display = 'none'; alert(`Datei konnte nicht gelesen werden: ${error.message}`); } }
   function openPicker() { el.input.value = ''; el.input.click(); }
   el.upload.addEventListener('click', openPicker); el.upload.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openPicker(); } }); el.change.addEventListener('click', openPicker); el.input.addEventListener('change', event => loadFile(event.target.files[0]));
   ['dragenter','dragover'].forEach(name => el.upload.addEventListener(name, event => { event.preventDefault(); el.upload.classList.add('active'); })); ['dragleave','drop'].forEach(name => el.upload.addEventListener(name, event => { event.preventDefault(); el.upload.classList.remove('active'); })); el.upload.addEventListener('drop', event => loadFile(event.dataTransfer.files[0]));
