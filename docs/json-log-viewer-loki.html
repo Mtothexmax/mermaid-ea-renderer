@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JSON Log Viewer</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0b0b;
+      --panel: #111111;
+      --panel-2: #181818;
+      --panel-3: #202020;
+      --text: #e8e8e8;
+      --muted: #929292;
+      --border: #303030;
+      --yellow: #f2cc0c;
+      --yellow-dark: #705d00;
+      --debug: #70c9ff;
+      --info: #a7a7a7;
+      --warning: #f2cc0c;
+      --error: #f2495c;
+      --fatal: #b877d9;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 Inter, system-ui, -apple-system, "Segoe UI", sans-serif; }
+    header { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 14px; padding: 15px 22px; border-bottom: 1px solid var(--border); background: #080808; box-shadow: 0 2px 14px #000; }
+    .logo { width: 8px; height: 34px; border-radius: 3px; background: var(--yellow); box-shadow: 0 0 16px #f2cc0c55; }
+    h1 { margin: 0; font-size: 19px; font-weight: 600; }
+    .subtitle { color: var(--muted); font-size: 12px; }
+    main { max-width: 1900px; margin: auto; padding: 18px 22px 28px; }
+    #uploadArea { display: grid; place-items: center; min-height: 260px; padding: 30px; border: 1px dashed #5b520d; border-radius: 6px; background: linear-gradient(180deg, #111, #0d0d0d); cursor: pointer; transition: .15s; }
+    #uploadArea:hover, #uploadArea.active { border-color: var(--yellow); background: #151407; }
+    .upload-inner { text-align: center; }
+    .upload-icon { margin-bottom: 12px; color: var(--yellow); font-size: 34px; }
+    .upload-title { font-size: 18px; font-weight: 600; }
+    .upload-note { margin-top: 6px; color: var(--muted); }
+    input[type=file] { display: none; }
+    #viewer { display: none; }
+    .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px; border: 1px solid var(--border); border-radius: 5px; background: var(--panel); }
+    button, input, select { min-height: 34px; border: 1px solid var(--border); border-radius: 3px; background: var(--panel-2); color: var(--text); font: inherit; }
+    button { padding: 6px 11px; cursor: pointer; }
+    button:hover { border-color: #686868; background: var(--panel-3); }
+    button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--yellow); outline-offset: 1px; }
+    .file-name { max-width: 330px; padding: 0 5px; overflow: hidden; color: #d0d0d0; text-overflow: ellipsis; white-space: nowrap; }
+    .change-file { border-color: #6a5b00; color: var(--yellow); }
+    .search-wrap { position: relative; flex: 1; min-width: 260px; }
+    #search { width: 100%; padding: 7px 33px 7px 10px; }
+    #clearSearch { position: absolute; top: 3px; right: 3px; min-height: 28px; padding: 2px 8px; border: 0; color: var(--muted); background: transparent; }
+    select { padding: 6px 9px; }
+    .filters { display: flex; flex-wrap: wrap; gap: 7px; margin: 12px 0; }
+    .level-toggle { position: relative; min-width: 92px; padding: 7px 12px 7px 28px; border-color: #363636; color: #d0d0d0; text-align: left; text-transform: uppercase; }
+    .level-toggle::before { position: absolute; top: 50%; left: 11px; width: 8px; height: 8px; border-radius: 50%; background: currentColor; content: ""; transform: translateY(-50%); }
+    .level-toggle[data-level=debug] { color: var(--debug); }
+    .level-toggle[data-level=info] { color: var(--info); }
+    .level-toggle[data-level=warning] { color: var(--warning); }
+    .level-toggle[data-level=error] { color: var(--error); }
+    .level-toggle[data-level=fatal] { color: var(--fatal); }
+    .level-toggle.off { color: #565656; opacity: .72; text-decoration: line-through; }
+    .level-toggle:not(.off) { background: #1c1c1c; box-shadow: inset 0 -2px currentColor; }
+    .filter-actions { margin-left: 3px; color: var(--muted); }
+    .status { display: flex; flex-wrap: wrap; gap: 18px; min-height: 22px; margin: 7px 1px 10px; color: var(--muted); font-size: 12px; }
+    .status strong { color: var(--yellow); font-weight: 500; }
+    .error-text { color: var(--error); }
+    .table-wrap { overflow: auto; max-height: calc(100vh - 245px); border: 1px solid var(--border); border-radius: 4px; background: var(--panel); }
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    th { position: sticky; top: 0; z-index: 2; padding: 8px 11px; border-bottom: 1px solid #464646; background: #171717; color: #bdbdbd; text-align: left; font-size: 12px; font-weight: 500; }
+    td { padding: 7px 11px; border-bottom: 1px solid #242424; vertical-align: top; }
+    tbody tr:hover { background: #191919; }
+    th:nth-child(1), td:nth-child(1) { width: 75px; color: #747474; }
+    th:nth-child(2), td:nth-child(2) { width: 205px; }
+    th:nth-child(3), td:nth-child(3) { width: 100px; }
+    th:nth-child(5), td:nth-child(5) { width: 85px; }
+    td.message { color: #e5e5e5; font-family: "Cascadia Mono", "SFMono-Regular", Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .context { margin-top: 3px; color: #727272; font-family: inherit; font-size: 11px; }
+    .level { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+    .level::before { width: 7px; height: 7px; border-radius: 50%; background: currentColor; content: ""; }
+    .level-debug { color: var(--debug); }
+    .level-info { color: var(--info); }
+    .level-warning { color: var(--warning); }
+    .level-error { color: var(--error); }
+    .level-fatal { color: var(--fatal); }
+    .level-other { color: #8d8d8d; }
+    mark { padding: 0 2px; border-radius: 2px; background: var(--yellow); color: #111; box-shadow: 0 0 0 1px var(--yellow-dark); }
+    details summary { color: var(--yellow); cursor: pointer; font-size: 12px; }
+    pre { max-height: 330px; overflow: auto; margin: 8px 0 2px; padding: 10px; border: 1px solid #303030; border-radius: 3px; background: #090909; color: #c4c4c4; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .empty { padding: 55px; color: var(--muted); text-align: center; }
+    .pager { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 10px; color: var(--muted); font-size: 12px; }
+    .pager-controls { display: flex; align-items: center; gap: 8px; }
+    button:disabled { cursor: default; opacity: .35; }
+    @media (max-width: 850px) { main, header { padding-left: 10px; padding-right: 10px; } .table-wrap { max-height: none; } th:nth-child(2), td:nth-child(2) { width: 170px; } th:nth-child(4), td:nth-child(4) { width: 600px; } .pager { align-items: flex-start; flex-direction: column; } }
+  </style>
+</head>
+<body>
+<header><div class="logo"></div><div><h1>JSON Log Viewer</h1><div class="subtitle">Lokale Log-Analyse im Loki-inspirierten Design</div></div></header>
+<main>
+  <section id="uploadArea" role="button" tabindex="0" aria-label="JSON-Datei auswählen">
+    <div class="upload-inner"><div class="upload-icon">⬆</div><div class="upload-title">JSON-Logdatei auswählen</div><div class="upload-note">Hier ablegen oder klicken · JSON, JSONL und NDJSON · Verarbeitung nur im Browser</div></div>
+  </section>
+  <input id="fileInput" type="file" accept=".json,.jsonl,.ndjson,application/json">
+
+  <section id="viewer">
+    <div class="toolbar">
+      <button id="changeFile" class="change-file" type="button">Andere Datei</button>
+      <span id="fileName" class="file-name"></span>
+      <div class="search-wrap"><input id="search" type="search" placeholder="Messages durchsuchen und Treffer markieren …"><button id="clearSearch" type="button" title="Suche leeren">×</button></div>
+      <label>Zeilen <select id="pageSize"><option>1000</option><option>5000</option><option selected>10000</option><option>25000</option><option>50000</option></select></label>
+    </div>
+    <div class="filters" aria-label="Log-Level-Filter">
+      <button class="level-toggle" data-level="debug" type="button">Debug</button>
+      <button class="level-toggle" data-level="info" type="button">Info</button>
+      <button class="level-toggle" data-level="warning" type="button">Warning</button>
+      <button class="level-toggle" data-level="error" type="button">Error</button>
+      <button class="level-toggle" data-level="fatal" type="button">Fatal</button>
+      <button id="allLevels" class="filter-actions" type="button">Alle</button>
+      <button id="noLevels" class="filter-actions" type="button">Keine</button>
+    </div>
+    <div id="status" class="status"></div>
+    <div class="table-wrap">
+      <table><thead><tr><th>#</th><th>Zeit</th><th>Level</th><th>Message</th><th>Details</th></tr></thead><tbody id="logBody"></tbody></table>
+    </div>
+    <div class="pager"><span id="range"></span><div class="pager-controls"><button id="prev" type="button">← Zurück</button><span id="pageInfo"></span><button id="next" type="button">Weiter →</button></div></div>
+  </section>
+</main>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const el = { upload: $('uploadArea'), input: $('fileInput'), viewer: $('viewer'), change: $('changeFile'), fileName: $('fileName'), search: $('search'), clearSearch: $('clearSearch'), pageSize: $('pageSize'), status: $('status'), body: $('logBody'), range: $('range'), pageInfo: $('pageInfo'), prev: $('prev'), next: $('next'), all: $('allLevels'), none: $('noLevels') };
+  const toggles = [...document.querySelectorAll('.level-toggle')];
+  let rows = [], filtered = [], page = 1, currentFile = '';
+  const activeLevels = new Set(['debug', 'info', 'warning', 'error', 'fatal']);
+  const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  const normalizeLevel = value => { const l = String(value ?? '').trim().toLowerCase(); if (l === 'information') return 'info'; if (l === 'warn') return 'warning'; if (l === 'err') return 'error'; if (l === 'verbose' || l === 'trace') return 'debug'; if (['debug','info','warning','error','fatal'].includes(l)) return l; return l || 'other'; };
+  function highlighted(value, term) { const text = String(value ?? ''); if (!term) return escapeHtml(text); const lower = text.toLocaleLowerCase('de'); const needle = term.toLocaleLowerCase('de'); let output = '', from = 0, index; while ((index = lower.indexOf(needle, from)) !== -1) { output += escapeHtml(text.slice(from, index)) + '<mark>' + escapeHtml(text.slice(index, index + term.length)) + '</mark>'; from = index + term.length; } return output + escapeHtml(text.slice(from)); }
+  function parseItem(item) { let inner = {}; if (typeof item?.line === 'string') { try { inner = JSON.parse(item.line); } catch { inner = { Message: item.line }; } } else if (item?.line && typeof item.line === 'object') inner = item.line; const rawLevel = item?.fields?.level ?? inner.Level ?? inner.level ?? item?.level ?? ''; return { message: String(inner.Message ?? inner.message ?? item?.Message ?? item?.message ?? ''), level: normalizeLevel(rawLevel), displayLevel: String(rawLevel || normalizeLevel(rawLevel)), context: String(inner.SourceContext ?? inner.source ?? item?.fields?.application ?? ''), timestamp: item?.timestamp ?? inner.Timestamp ?? item?.Timestamp ?? '', raw: item }; }
+  function parseText(text) { text = text.replace(/^\uFEFF/, '').trim(); if (!text) return []; try { const value = JSON.parse(text); return Array.isArray(value) ? value : Array.isArray(value.logs) ? value.logs : [value]; } catch { const result = []; for (const [i, line] of text.split(/\r?\n/).entries()) { if (!line.trim()) continue; try { result.push(JSON.parse(line)); } catch { throw new Error(`Ungültiges JSON in Zeile ${i + 1}.`); } } return result; } }
+  function formatTime(value) { if (value === '' || value == null) return '—'; try { const s = String(value); let ms; if (/^\d+$/.test(s)) { const n = BigInt(s); ms = Number(s.length >= 16 ? n / 1000000n : s.length >= 13 ? n : s.length >= 10 ? n * 1000n : n); } else ms = Date.parse(s); if (!Number.isFinite(ms)) return s; return new Intl.DateTimeFormat('de-DE', { dateStyle: 'short', timeStyle: 'medium', fractionalSecondDigits: 3 }).format(new Date(ms)); } catch { return String(value); } }
+  function applyFilters() { const term = el.search.value.trim(); filtered = rows.filter(row => activeLevels.has(row.level) && (!term || row.message.toLocaleLowerCase('de').includes(term.toLocaleLowerCase('de')))); page = 1; render(); }
+  function render() { const size = Number(el.pageSize.value); const pages = Math.max(1, Math.ceil(filtered.length / size)); page = Math.min(page, pages); const start = (page - 1) * size; const items = filtered.slice(start, start + size); const term = el.search.value.trim(); el.body.innerHTML = items.length ? items.map((row, i) => `<tr><td>${start + i + 1}</td><td title="${escapeHtml(row.timestamp)}">${escapeHtml(formatTime(row.timestamp))}</td><td><span class="level level-${escapeHtml(row.level)}">${escapeHtml(row.displayLevel || row.level)}</span></td><td class="message">${highlighted(row.message || '—', term)}${row.context ? `<div class="context">${escapeHtml(row.context)}</div>` : ''}</td><td><details><summary>JSON</summary><pre>${escapeHtml(JSON.stringify(row.raw, null, 2))}</pre></details></td></tr>`).join('') : '<tr><td colspan="5" class="empty">Keine passenden Logeinträge.</td></tr>'; el.range.textContent = filtered.length ? `${start + 1}–${Math.min(start + size, filtered.length)} von ${filtered.length}` : '0 Einträge'; el.pageInfo.textContent = `Seite ${page} / ${pages}`; el.prev.disabled = page <= 1; el.next.disabled = page >= pages; el.status.innerHTML = `<span><strong>${escapeHtml(currentFile)}</strong></span><span>${rows.length.toLocaleString('de-DE')} Einträge geladen</span><span>${filtered.length.toLocaleString('de-DE')} sichtbar</span>`; }
+  async function loadFile(file) { if (!file) return; try { el.status.textContent = 'Datei wird gelesen …'; const parsed = parseText(await file.text()); rows = parsed.map(parseItem); currentFile = file.name; el.fileName.textContent = file.name; el.fileName.title = file.name; el.upload.style.display = 'none'; el.viewer.style.display = 'block'; activeLevels.clear(); ['debug','info','warning','error','fatal'].forEach(level => activeLevels.add(level)); toggles.forEach(button => button.classList.remove('off')); el.search.value = ''; page = 1; applyFilters(); } catch (error) { el.upload.style.display = 'grid'; el.viewer.style.display = 'none'; alert(`Datei konnte nicht gelesen werden: ${error.message}`); } }
+  function openPicker() { el.input.value = ''; el.input.click(); }
+  el.upload.addEventListener('click', openPicker); el.upload.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openPicker(); } }); el.change.addEventListener('click', openPicker); el.input.addEventListener('change', event => loadFile(event.target.files[0]));
+  ['dragenter','dragover'].forEach(name => el.upload.addEventListener(name, event => { event.preventDefault(); el.upload.classList.add('active'); })); ['dragleave','drop'].forEach(name => el.upload.addEventListener(name, event => { event.preventDefault(); el.upload.classList.remove('active'); })); el.upload.addEventListener('drop', event => loadFile(event.dataTransfer.files[0]));
+  toggles.forEach(button => button.addEventListener('click', () => { const level = button.dataset.level; if (activeLevels.has(level)) { activeLevels.delete(level); button.classList.add('off'); } else { activeLevels.add(level); button.classList.remove('off'); } applyFilters(); }));
+  el.all.addEventListener('click', () => { toggles.forEach(button => { activeLevels.add(button.dataset.level); button.classList.remove('off'); }); applyFilters(); }); el.none.addEventListener('click', () => { activeLevels.clear(); toggles.forEach(button => button.classList.add('off')); applyFilters(); });
+  el.search.addEventListener('input', applyFilters); el.clearSearch.addEventListener('click', () => { el.search.value = ''; el.search.focus(); applyFilters(); }); el.pageSize.addEventListener('change', () => { page = 1; render(); }); el.prev.addEventListener('click', () => { if (page > 1) { page--; render(); } }); el.next.addEventListener('click', () => { if (page * Number(el.pageSize.value) < filtered.length) { page++; render(); } });
+})();
+</script>
+</body>
+</html>

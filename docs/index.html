@@ -1,477 +1,1049 @@
 <!doctype html>
 <html lang="de">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>EA Markdown Renderer</title>
-    https://unpkg.com/vue@3/dist/vue.global.prod.js
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
-    <style>
-        :root {
-            color-scheme: light;
-        }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-        html,
-        body,
-        #app {
-            height: 100%;
-            margin: 0;
-        }
+<title>EA Markdown Renderer</title>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
 
-        body {
-            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background: #e7ebf0;
-        }
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
 
-        .material-icons-round {
-            font-size: 20px;
-            line-height: 1;
-        }
+<style>
+    :root {
+        color-scheme: light;
+    }
 
-        .ea-grid {
-            background-color: #f7f8fa;
-            background-image:
-                linear-gradient(#dfe3e8 1px, transparent 1px),
-                linear-gradient(90deg, #dfe3e8 1px, transparent 1px),
-                linear-gradient(#eceff2 1px, transparent 1px),
-                linear-gradient(90deg, #eceff2 1px, transparent 1px);
-            background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
-        }
+    html,
+    body,
+    #app {
+      height: 100%;
+      margin: 0;
+    }
 
-        .diagram svg {
-            max-width: none !important;
-            height: auto;
-        }
+    body {
+      font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+      background: #e7ebf0;
+    }
 
-        .diagram .node rect,
-        .diagram .node polygon,
-        .diagram .node path,
-        .diagram .node circle,
-        .diagram .node ellipse {
-            stroke: #4d5966 !important;
-            stroke-width: 1.1px !important;
-            filter: drop-shadow(0 1px 1px rgba(15, 23, 42, .12));
-        }
+    .material-icons-round {
+      font-size: 20px;
+      line-height: 1;
+    }
 
-        .diagram .nodeLabel,
-        .diagram .edgeLabel {
-            font-family: "Segoe UI", Arial, sans-serif !important;
-            font-size: 13px !important;
-            color: #1f2937 !important;
-        }
+    .ea-grid {
+      background-color: #f7f8fa;
+      background-image:
+        linear-gradient(#dfe3e8 1px, transparent 1px),
+        linear-gradient(90deg, #dfe3e8 1px, transparent 1px),
+        linear-gradient(#eceff2 1px, transparent 1px),
+        linear-gradient(90deg, #eceff2 1px, transparent 1px);
+      background-size:
+        100px 100px,
+        100px 100px,
+        20px 20px,
+        20px 20px;
+    }
 
-        .diagram .edgeLabel {
-            background: #f7f8fa !important;
-        }
+    .diagram svg {
+      max-width: none !important;
+      height: auto;
+    }
 
-        .diagram .cluster rect {
-            fill: rgba(228, 235, 244, .62) !important;
-            stroke: #778899 !important;
-            stroke-dasharray: 4 3;
-        }
+    .diagram .node rect,
+    .diagram .node polygon,
+    .diagram .node path,
+    .diagram .node circle,
+    .diagram .node ellipse {
+      stroke: #4d5966 !important;
+      stroke-width: 1.1px !important;
+      filter: drop-shadow(0 1px 1px rgba(15, 23, 42, 0.12));
+    }
 
-        .diagram .cluster-label {
-            font-weight: 600;
-            color: #334155 !important;
-        }
+    .diagram .nodeLabel,
+    .diagram .edgeLabel {
+      font-family: "Segoe UI", Arial, sans-serif !important;
+      font-size: 13px !important;
+      color: #1f2937 !important;
+    }
 
-        .diagram g.node {
-            cursor: pointer;
-        }
+    .diagram .edgeLabel {
+      background: #f7f8fa !important;
+    }
 
-        .diagram g.node:hover rect,
-        .diagram g.node:hover polygon,
-        .diagram g.node:hover circle,
-        .diagram g.node:hover ellipse,
-        .diagram g.node:hover path {
-            stroke: #0b6bcb !important;
-            stroke-width: 2px !important;
-        }
+    .diagram .cluster rect {
+      fill: rgba(228, 235, 244, 0.62) !important;
+      stroke: #778899 !important;
+      stroke-dasharray: 4 3;
+    }
 
-        .diagram g.node.selected rect,
-        .diagram g.node.selected polygon,
-        .diagram g.node.selected circle,
-        .diagram g.node.selected ellipse,
-        .diagram g.node.selected path {
-            stroke: #005fb8 !important;
-            stroke-width: 2.5px !important;
-            filter: drop-shadow(0 0 4px rgba(0, 95, 184, .3));
-        }
+    .diagram .cluster-label {
+      font-weight: 600;
+      color: #334155 !important;
+    }
 
-        textarea {
-            scrollbar-width: thin;
-        }
+    .diagram g.node {
+      cursor: pointer;
+    }
 
-        .resize-handle {
-            cursor: col-resize;
-            width: 5px;
-            transition: background .15s;
-        }
+    .diagram g.node:hover rect,
+    .diagram g.node:hover polygon,
+    .diagram g.node:hover circle,
+    .diagram g.node:hover ellipse,
+    .diagram g.node:hover path {
+      stroke: #0b6bcb !important;
+      stroke-width: 2px !important;
+    }
 
-        .resize-handle:hover {
-            background: #0b6bcb;
-        }
+    .diagram g.node.selected rect,
+    .diagram g.node.selected polygon,
+    .diagram g.node.selected circle,
+    .diagram g.node.selected ellipse,
+    .diagram g.node.selected path {
+      stroke: #005fb8 !important;
+      stroke-width: 2.5px !important;
+      filter: drop-shadow(0 0 4px rgba(0, 95, 184, 0.3));
+    }
 
-        .toast-enter-active,
-        .toast-leave-active {
-            transition: all .2s ease;
-        }
+    textarea {
+      scrollbar-width: thin;
+    }
 
-        .toast-enter-from,
-        .toast-leave-to {
-            opacity: 0;
-            transform: translateY(8px);
-        }
-    </style>
+    .resize-handle {
+      cursor: col-resize;
+      width: 5px;
+      transition: background 0.15s;
+    }
+
+    .resize-handle:hover {
+      background: #0b6bcb;
+    }
+
+    .toast-enter-active,
+    .toast-leave-active {
+      transition: all 0.2s ease;
+    }
+
+    .toast-enter-from,
+    .toast-leave-to {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+</style>
 </head>
 
 <body>
-    <div id="app" class="h-full flex flex-col text-slate-800">
-        <header class="h-14 shrink-0 bg-[#263746] text-white flex items-center px-4 shadow-md z-30">
-            <div class="flex items-center gap-3 min-w-0">
-                <span class="material-icons-round text-sky-300">account_tree</span>
-                <div class="min-w-0">
-                    <h1 class="font-semibold text-sm tracking-wide truncate">EA Markdown Renderer</h1>
-                    <p class="text-[11px] text-slate-300 truncate">Aktivitätsdiagramm mit bearbeitbaren Elementnotizen
-                    </p>
-                </div>
-            </div>
-            <div class="ml-auto flex items-center gap-1">
-                <button @click="fitDiagram" title="Diagramm einpassen" class="p-2 rounded hover:bg-white/10"><span
-                        class="material-icons-round">fit_screen</span></button>
-                <button @click="zoomOut" title="Verkleinern" class="p-2 rounded hover:bg-white/10"><span
-                        class="material-icons-round">zoom_out</span></button>
-                <span class="text-xs tabular-nums w-12 text-center">{{ Math.round(zoom * 100) }}%</span>
-                <button @click="zoomIn" title="Vergrößern" class="p-2 rounded hover:bg-white/10"><span
-                        class="material-icons-round">zoom_in</span></button>
-                <div class="h-6 w-px bg-white/20 mx-2"></div>
-                <button @click="copyMarkdown"
-                    class="h-9 px-3 rounded bg-[#0b6bcb] hover:bg-[#075ba9] flex items-center gap-2 text-sm font-medium shadow">
-                    <span class="material-icons-round">content_copy</span><span class="hidden sm:inline">Markdown
-                        kopieren</span>
-                </button>
-            </div>
-        </header>
-
-        <div class="h-9 shrink-0 bg-[#f5f6f7] border-b border-slate-300 flex items-center px-3 gap-1 text-xs z-20">
-            <button @click="activeView='diagram'"
-                :class="activeView==='diagram' ? 'bg-white border-slate-300 shadow-sm text-sky-700' : 'border-transparent hover:bg-white/70'"
-                class="px-3 py-1 border rounded-sm flex items-center gap-1.5"><span
-                    class="material-icons-round !text-[16px]">schema</span>Diagramm</button>
-            <button @click="activeView='source'"
-                :class="activeView==='source' ? 'bg-white border-slate-300 shadow-sm text-sky-700' : 'border-transparent hover:bg-white/70'"
-                class="px-3 py-1 border rounded-sm flex items-center gap-1.5"><span
-                    class="material-icons-round !text-[16px]">code</span>Quelltext</button>
-            <span class="ml-auto text-slate-500">{{ nodeCount }} Elemente · {{ noteEntries.length }} Notizen</span>
+<div id="app" class="h-full flex flex-col text-slate-800">
+    <header class="h-14 shrink-0 bg-[#263746] text-white flex items-center px-4 shadow-md z-30">
+        <div class="flex items-center gap-3 min-w-0">
+        <span class="material-icons-round text-sky-300">
+            account_tree
+        </span>
+        
+        <div class="min-w-0">
+        <h1 class="font-semibold text-sm tracking-wide truncate">
+            EA Markdown Renderer
+        </h1>
+        
+        <p class="text-[11px] text-slate-300 truncate">
+            Aktivitätsdiagramm mit bearbeitbaren Elementnotizen
+        </p>
+        </div>
         </div>
 
-        <main class="flex-1 min-h-0 flex overflow-hidden">
-            <section class="flex-1 min-w-0 relative bg-white">
-                <div v-if="activeView==='diagram'" ref="viewport" class="absolute inset-0 ea-grid overflow-auto"
-                    @wheel.ctrl.prevent="onWheel">
-                    <div class="min-w-full min-h-full p-10 flex justify-center items-start">
-                        <div ref="diagramEl" class="diagram origin-top transition-transform duration-100"
-                            :style="{ transform: `scale(${zoom})` }"></div>
-                    </div>
-                </div>
-                <div v-else class="absolute inset-0 flex flex-col bg-[#1e2935]">
-                    <div class="h-9 px-3 flex items-center text-xs text-slate-300 border-b border-slate-600">
-                        <span class="material-icons-round !text-[16px] mr-2">description</span>diagram.md
-                        <button @click="renderDiagram"
-                            class="ml-auto px-2 py-1 rounded bg-sky-700 hover:bg-sky-600 text-white flex items-center gap-1"><span
-                                class="material-icons-round !text-[15px]">play_arrow</span>Rendern</button>
-                    </div>
-                    <textarea v-model="source" spellcheck="false"
-                        class="flex-1 resize-none bg-[#1e2935] text-[#d9e2ec] p-4 outline-none font-mono text-xs leading-5"></textarea>
-                </div>
-                <div v-if="error"
-                    class="absolute left-4 right-4 bottom-4 bg-red-50 border border-red-300 text-red-800 rounded shadow-lg p-3 text-sm flex gap-2 z-20">
-                    <span class="material-icons-round text-red-600">error</span>
-                    <div><strong>Renderfehler</strong>
-                        <div class="mt-1 whitespace-pre-wrap text-xs">{{ error }}</div>
-                    </div>
-                    <button @click="error=''" class="ml-auto self-start"><span
-                            class="material-icons-round">close</span></button>
-                </div>
-            </section>
+    <div class="ml-auto flex items-center gap-1">
+        <button type="button" title="Diagramm einpassen" class="p-2 rounded hover:bg-white/10" @click="fitDiagram">
+            <span class="material-icons-round">fit_screen</span>
+        </button>
+        
+        <button type="button" title="Verkleinern" class="p-2 rounded hover:bg-white/10" @click="zoomOut">
+            <span class="material-icons-round">zoom_out</span>
+        </button>
+        
+        <span class="text-xs tabular-nums w-12 text-center">
+            {{ Math.round(zoom * 100) }}%
+        </span>
+        
+        <button type="button" title="Vergrößern" class="p-2 rounded hover:bg-white/10" @click="zoomIn">
+            <span class="material-icons-round">zoom_in</span>
+        </button>
+        
+        <div class="h-6 w-px bg-white/20 mx-2"></div>
+<button type="button"
+    class="h-9 px-3 rounded bg-[#0b6bcb] hover:bg-[#075ba9] flex items-center gap-2 text-sm font-medium shadow"
+    @click="copyMarkdown">
+    <span class="material-icons-round">content_copy</span>
+    <span class="hidden sm:inline">Markdown kopieren</span>
+</button>
+</div>
+</header>
 
-            <div class="resize-handle shrink-0 bg-slate-300" @mousedown="startResize"></div>
-
-            <aside class="shrink-0 bg-[#f7f7f7] border-l border-slate-300 flex flex-col min-w-[280px] max-w-[620px]"
-                :style="{ width: panelWidth + 'px' }">
-                <div class="h-10 shrink-0 border-b border-slate-300 bg-[#e8ebee] flex items-center px-3 gap-2">
-                    <span class="material-icons-round text-slate-600">notes</span>
-                    <h2 class="font-semibold text-sm">Notizen</h2>
-                    <span v-if="dirty"
-                        class="ml-auto text-[10px] uppercase tracking-wide text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">geändert</span>
-                </div>
-                <div class="p-3 border-b border-slate-300 bg-white">
-                    <label class="relative block">
-                        <span
-                            class="material-icons-round absolute left-2 top-2 text-slate-400 !text-[18px]">search</span>
-                        <input v-model="search" placeholder="Element oder Notiz suchen"
-                            class="w-full h-9 pl-8 pr-8 border border-slate-300 rounded-sm text-sm outline-none focus:ring-1 focus:ring-sky-600 focus:border-sky-600" />
-                        <button v-if="search" @click="search=''" class="absolute right-2 top-2 text-slate-400"><span
-                                class="material-icons-round !text-[18px]">close</span></button>
-                    </label>
-                </div>
-                <div class="flex-1 min-h-0 flex">
-                    <nav class="w-[42%] min-w-[125px] overflow-y-auto border-r border-slate-300 bg-white">
-                        <button v-for="item in filteredNotes" :key="item.nodeId" @click="selectNote(item.nodeId)"
-                            :class="selectedId===item.nodeId ? 'bg-[#dcecf9] border-l-[#0b6bcb]' : 'border-l-transparent hover:bg-slate-50'"
-                            class="w-full text-left px-3 py-2.5 border-l-4 border-b border-slate-100">
-                            <div class="text-xs font-semibold text-slate-700 truncate">{{ item.nodeId }}</div>
-                            <div class="text-[11px] text-slate-500 mt-0.5 line-clamp-2">{{ item.label }}</div>
-                        </button>
-                        <div v-if="!filteredNotes.length" class="p-4 text-center text-xs text-slate-500">Keine Notizen
-                            gefunden</div>
-                    </nav>
-                    <div class="flex-1 min-w-0 flex flex-col">
-                        <template v-if="selectedNote">
-                            <div class="p-3 border-b border-slate-300 bg-[#fafafa]">
-                                <div class="text-[10px] uppercase tracking-wider text-slate-500">Element</div>
-                                <div class="font-semibold text-sm mt-0.5 break-all">{{ selectedNote.nodeId }}</div>
-                                <div class="text-xs text-slate-500 mt-1 line-clamp-2">{{ selectedNote.label }}</div>
-                            </div>
-                            <textarea v-model="selectedNote.text" @input="dirty=true" spellcheck="true"
-                                class="flex-1 min-h-[160px] resize-none p-3 bg-white outline-none text-sm leading-6 focus:shadow-inner"
-                                placeholder="Notiz eingeben..."></textarea>
-                            <div class="p-2 border-t border-slate-300 bg-[#eef0f2] flex gap-2">
-                                <button @click="applyNotes"
-                                    class="flex-1 h-8 bg-[#0b6bcb] hover:bg-[#075ba9] text-white text-xs font-medium rounded-sm flex items-center justify-center gap-1"><span
-                                        class="material-icons-round !text-[16px]">save</span>Übernehmen</button>
-                                <button @click="copyCurrentNote" title="Notiz kopieren"
-                                    class="h-8 w-9 bg-white border border-slate-300 hover:bg-slate-50 rounded-sm"><span
-                                        class="material-icons-round !text-[17px]">content_copy</span></button>
-                            </div>
-                        </template>
-                        <div v-else
-                            class="flex-1 flex flex-col items-center justify-center text-center p-5 text-slate-500">
-                            <span class="material-icons-round !text-4xl text-slate-300">touch_app</span>
-                            <p class="text-sm mt-2">Knoten im Diagramm oder eine Notiz auswählen</p>
-                        </div>
-                    </div>
-                </div>
-            </aside>
-        </main>
-
-        <footer class="h-6 shrink-0 bg-[#263746] text-slate-300 px-3 flex items-center text-[10px] z-30">
-            <span class="w-2 h-2 rounded-full mr-2" :class="error ? 'bg-red-400' : 'bg-emerald-400'"></span>{{ error ?
-            'Diagramm enthält Fehler' : 'Bereit' }}
-            <span class="ml-auto">Vue.js · Tailwind CSS · Mermaid</span>
-        </footer>
-
-        <transition name="toast">
-            <div v-if="toast"
-                class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-4 py-2 rounded shadow-xl text-sm flex items-center gap-2 z-50">
-                <span class="material-icons-round text-emerald-400">check_circle</span>{{ toast }}</div>
-        </transition>
+    <div class="h-9 shrink-0 bg-[#f5f6f7] border-b border-slate-300 flex items-center px-3 gap-1 text-xs z-20">
+        <button type="button" class="px-3 py-1 border rounded-sm flex items-center gap-1.5" :class="
+              activeView === 'diagram'
+                ? 'bg-white border-slate-300 shadow-sm text-sky-700'
+                : 'border-transparent hover:bg-white/70'
+            " @click="activeView = 'diagram'">
+            <span class="material-icons-round !text-[16px]">schema</span>
+            Diagramm
+        </button>
+    
+        <button type="button" class="px-3 py-1 border rounded-sm flex items-center gap-1.5" :class="
+              activeView === 'source'
+                ? 'bg-white border-slate-300 shadow-sm text-sky-700'
+                : 'border-transparent hover:bg-white/70'
+            " @click="activeView = 'source'">
+            <span class="material-icons-round !text-[16px]">code</span>
+            Quelltext
+        </button>
+    
+        <span class="ml-auto text-slate-500">
+            {{ nodeCount }} Elemente · {{ noteEntries.length }} Notizen
+        </span>
     </div>
-    <script>
-        const SAMPLE = `flowchart TD
-N3001[("Waldeinteilungsflächen B Join")]
-N3002[("Waldeinteilung_Sachdaten")]
-N3003[("O_MT_SUBTYPE_INFO")]
-N3004[("Text Waldeinteilung B")]
-subgraph N3100["kuttexteerzeugen"]
-Start(["▶ Skripttool 'Waldeinteilungstexte erzeugen' gestartet"])
-AKopieren["Basisflächen und leere Zieltextklasse\
-in temporäre Arbeitsdatenbank kopieren"]
-D1{"Basisflächen vorhanden?"}
-M1(("  "))
-End2(["✕ Keine Basisflächen vorhanden – nichts zu tun"])
-D2{"Neue Texte erzeugen oder\
-vorhandene Texte aktualisieren angefordert?"}
-End3(["✕ Texterzeugung/-aktualisierung nicht angefordert"])
-ADissolve["Flächen nach konfigurierten Dissolve-Feldern zusammenfassen"]
-AText["Textfeld anhand der konfigurierten Textquelle berechnen"]
-ALeer["Flächen mit leerem Textwert löschen"]
-AAufraeumen["Nicht mehr benötigte Zwischenfelder löschen"]
-D3{"Neue Texte erzeugen angefordert?"}
-AMinArea["Flächen unter der Mindestflächengröße entfernen"]
-D4{"Flächen für neue Texte vorhanden?"}
-M2(("  "))
-APunkte["Textpunkt je verbleibender Fläche erzeugen"]
-ALabel["Texte aus dem Textpunkt-Label erzeugen"]
-AFeatureGlobalId["GLOBALID in FEATUREGLOBALID der neuen Texte übernehmen"]
-D5{"Neue oder aktualisierte Texte vorhanden?"}
-AAnhaengen["Neue Texte an die temporäre Ziel-Textklasse anfügen"]
-AUebernahme["Vorbereitete Texte in die reale Ziel-Textklasse übernehmen"]
-M3(("  "))
-End1(["⏹ Skripttool erfolgreich abgeschlossen"])
-end
-Start --> AKopieren
-AKopieren --> D1
-N3001 -.Trace.-> AKopieren
-N3004 -.Trace.-> AKopieren
-D1 -- Nein --> M1
-D1 -- Ja --> D2
-M1 --> End2
-D2 -- Nein --> End3
-D2 -- Ja --> ADissolve
-N3001 -.Trace.-> ADissolve
-N3003 -.Trace.-> ADissolve
-ADissolve --> AText
-N3002 -.Trace.-> AText
-AText --> ALeer
-ALeer --> AAufraeumen
-AAufraeumen --> D3
-D3 -- Nein --> D5
-D3 -- Ja --> AMinArea
-AMinArea --> D4
-D4 -- Nein --> M2
-D4 -- Ja --> APunkte
-M2 --> D5
-APunkte --> ALabel
-ALabel --> AFeatureGlobalId
-AFeatureGlobalId --> D5
-D5 -- Nein --> M3
-D5 -- Ja --> AAnhaengen
-AAnhaengen --> AUebernahme
-N3004 -.Trace.-> AUebernahme
-AUebernahme --> M3
-M3 --> End1
 
-NoteStart@{ shape: braces, label: "Die Erzeugung bzw. Aktualisierung der Waldeinteilungstexte wird aufgerufen." }
+    <main class="flex-1 min-h-0 flex overflow-hidden">
+        <section class="flex-1 min-w-0 relative bg-white">
+        <div v-if="activeView === 'diagram'" ref="viewport" class="absolute inset-0 ea-grid overflow-auto"
+            @wheel.ctrl.prevent="onWheel">
+            <div class="min-w-full min-h-full p-10 flex justify-center items-start">
+            <div ref="diagramEl" class="diagram origin-top transition-transform duration-100"
+                :style="{ transform: `scale(${zoom})` }"></div>
+            </div>
+            </div>
+<div v-else class="absolute inset-0 flex flex-col bg-[#1e2935]">
+    <div class="h-9 px-3 flex items-center text-xs text-slate-300 border-b border-slate-600">
+        <span class="material-icons-round !text-[16px] mr-2">
+            description
+        </span>
+
+        diagram.md
+
+        <button type="button"
+            class="ml-auto px-2 py-1 rounded bg-sky-700 hover:bg-sky-600 text-white flex items-center gap-1"
+            @click="renderDiagram">
+            <span class="material-icons-round !text-[15px]">
+                play_arrow
+            </span>
+            Rendern
+        </button>
+    </div>
+<textarea v-model="source" spellcheck="false"
+    class="flex-1 resize-none bg-[#1e2935] text-[#d9e2ec] p-4 outline-none font-mono text-xs leading-5"></textarea>
+</div>
+<div v-if="error"
+    class="absolute left-4 right-4 bottom-4 bg-red-50 border border-red-300 text-red-800 rounded shadow-lg p-3 text-sm flex gap-2 z-20">
+    <span class="material-icons-round text-red-600">error</span>
+<div>
+    <strong>Renderfehler</strong>
+    <div class="mt-1 whitespace-pre-wrap text-xs">
+        {{ error }}
+    </div>
+        </div>
+        
+        <button type="button" class="ml-auto self-start" @click="error = ''">
+            <span class="material-icons-round">close</span>
+        </button>
+        </div>
+        </section>
+
+    <div class="resize-handle shrink-0 bg-slate-300" @mousedown="startResize"></div>
+
+    <aside class="shrink-0 bg-[#f7f7f7] border-l border-slate-300 flex flex-col min-w-[280px] max-w-[620px]"
+        :style="{ width: panelWidth + 'px' }">
+        <div class="h-10 shrink-0 border-b border-slate-300 bg-[#e8ebee] flex items-center px-3 gap-2">
+            <span class="material-icons-round text-slate-600">notes</span>
+
+        <h2 class="font-semibold text-sm">Notizen</h2>
+<span v-if="dirty"
+    class="ml-auto text-[10px] uppercase tracking-wide text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+    geändert
+</span>
+</div>
+
+        <div class="p-3 border-b border-slate-300 bg-white">
+            <label class="relative block">
+                <span
+              class="material-icons-round absolute left-2 top-2 text-slate-400 !text-[18px]"
+            >
+              search
+            </span>
+
+            <input
+              v-model="search"
+              type="search"
+              placeholder="Element oder Notiz suchen"
+              class="w-full h-9 pl-8 pr-8 border border-slate-300 rounded-sm text-sm outline-none focus:ring-1 focus:ring-sky-600 focus:border-sky-600"
+            />
+
+            <button
+              v-if="search"
+              type="button"
+              class="absolute right-2 top-2 text-slate-400"
+              @click="search = ''"
+            >
+              <span class="material-icons-round !text-[18px]">close</span>
+            </button>
+          </label>
+        </div>
+
+        <div class="flex-1 min-h-0 flex">
+        <nav class="w-[42%] min-w-[125px] overflow-y-auto border-r border-slate-300 bg-white">
+            <button v-for="item in filteredNotes" :key="item.noteId" type="button"
+                class="w-full text-left px-3 py-2.5 border-l-4 border-b border-slate-100" :class="
+                        selectedId === item.nodeId
+                          ? 'bg-[#dcecf9] border-l-[#0b6bcb]'
+                          : 'border-l-transparent hover:bg-slate-50'
+                      " @click="selectNote(item.nodeId)">
+                <div class="text-xs font-semibold text-slate-700 truncate">
+                    {{ item.nodeId }}
+                </div>
+        
+                <div class="text-[11px] text-slate-500 mt-0.5 line-clamp-2">
+                    {{ item.label }}
+                </div>
+            </button>
+<div v-if="!filteredNotes.length" class="p-4 text-center text-xs text-slate-500">
+    Keine Notizen gefunden
+</div>
+</nav>
+
+        <div class="flex-1 min-w-0 flex flex-col">
+            <template v-if="selectedNote">
+                <div class="p-3 border-b border-slate-300 bg-[#fafafa]">
+                <div class="text-[10px] uppercase tracking-wider text-slate-500">
+                    Element
+                </div>
+<div class="font-semibold text-sm mt-0.5 break-all">
+    {{ selectedNote.nodeId }}
+</div>
+
+<div class="text-xs text-slate-500 mt-1 line-clamp-2">
+    {{ selectedNote.label }}
+</div>
+</div>
+
+<textarea v-model="selectedNote.text" spellcheck="true" placeholder="Notiz eingeben..."
+    class="flex-1 min-h-[160px] resize-none p-3 bg-white outline-none text-sm leading-6 focus:shadow-inner"
+                @input="dirty = true"
+              ></textarea>
+
+              <div
+                class="p-2 border-t border-slate-300 bg-[#eef0f2] flex gap-2"
+              >
+                <button
+                  type="button"
+                  class="flex-1 h-8 bg-[#0b6bcb] hover:bg-[#075ba9] text-white text-xs font-medium rounded-sm flex items-center justify-center gap-1"
+                  @click="applyNotes"
+                >
+                  <span class="material-icons-round !text-[16px]">save</span>
+                  Übernehmen
+                </button>
+
+                <button
+                  type="button"
+                  title="Notiz kopieren"
+                  class="h-8 w-9 bg-white border border-slate-300 hover:bg-slate-50 rounded-sm"
+                  @click="copyCurrentNote"
+                >
+                  <span class="material-icons-round !text-[17px]">
+                    content_copy
+                  </span>
+                </button>
+              </div>
+            </template>
+<div v-else class="flex-1 flex flex-col items-center justify-center text-center p-5 text-slate-500">
+    <span class="material-icons-round !text-4xl text-slate-300">
+        touch_app
+    </span>
+
+    <p class="text-sm mt-2">
+        Knoten im Diagramm oder eine Notiz auswählen
+    </p>
+</div>
+</div>
+</div>
+</aside>
+</main>
+
+    <footer class="h-6 shrink-0 bg-[#263746] text-slate-300 px-3 flex items-center text-[10px] z-30">
+        <span class="w-2 h-2 rounded-full mr-2" :class="error ? 'bg-red-400' : 'bg-emerald-400'"></span>
+    
+        {{ error ? 'Diagramm enthält Fehler' : 'Bereit' }}
+    
+        <span class="ml-auto">
+            Vue.js · Tailwind CSS · Mermaid
+        </span>
+    </footer>
+
+    <transition name="toast">
+    <div v-if="toast"
+        class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-4 py-2 rounded shadow-xl text-sm flex items-center gap-2 z-50">
+        <span class="material-icons-round text-emerald-400">
+            check_circle
+        </span>
+    
+        {{ toast }}
+    </div>
+    </transition>
+    </div>
+
+<script>
+    const SAMPLE = `flowchart TD
+Start(["▶ Prozess gestartet"])
+Action["Markdown verarbeiten"]
+Decision{"Notizen vorhanden?"}
+End(["⏹ Prozess abgeschlossen"])
+Start --> Action
+Action --> Decision
+Decision -- Ja --> End
+Decision -- Nein --> End
+
+NoteStart@{ shape: braces, label: "Der Prozess wird gestartet." }
 NoteStart --- Start
-NoteAKopieren@{ shape: braces, label: "Die Basisflächen werden in eine temporäre Arbeitsdatenbank kopiert; die Zieltextklasse wird dort als leere Struktur angelegt." }
-NoteAKopieren --- AKopieren
-NoteD1@{ shape: braces, label: "Es wird geprüft, ob nach dem Kopieren Basisflächen vorhanden sind." }
-NoteD1 --- D1
-NoteADissolve@{ shape: braces, label: "Die Basisflächen werden nach den konfigurierten Dissolve-Feldern zusammengefasst." }
-NoteADissolve --- ADissolve
-NoteAText@{ shape: braces, label: "Das Textfeld wird aus der konfigurierten Textquelle berechnet; optional wird eine Sachdatentabelle verbunden." }
-NoteAText --- AText
-NoteAFeatureGlobalId@{ shape: braces, label: "Die GLOBALID der zugrunde liegenden Waldeinteilungsfläche wird in FEATUREGLOBALID der neuen Annotation übernommen." }
-NoteAFeatureGlobalId --- AFeatureGlobalId
-NoteAUebernahme@{ shape: braces, label: "Erst nach erfolgreicher Vorbereitung werden die Texte in einem einzigen Schritt in die reale Zielklasse übernommen." }
-NoteAUebernahme --- AUebernahme
-NoteEnd1@{ shape: braces, label: "Die Texterzeugung wurde erfolgreich abgeschlossen." }
-NoteEnd1 --- End1`;
+NoteAction@{ shape: braces, label: "Der Markdown-Quelltext wird analysiert und als Diagramm dargestellt." }
+NoteAction --- Action
+NoteDecision@{ shape: braces, label: "Es wird geprüft, ob dem Diagramm Notizen zugeordnet sind." }
+NoteDecision --- Decision
+NoteEnd@{ shape: braces, label: "Der Prozess wurde erfolgreich abgeschlossen." }
+NoteEnd --- End`;
 
-        const { createApp, ref, computed, nextTick, onMounted } = Vue;
+        const {
+            createApp,
+            ref,
+            computed,
+            nextTick,
+            onMounted
+        } = Vue;
+
         createApp({
             setup() {
-                const source = ref(SAMPLE), diagramEl = ref(null), viewport = ref(null);
-                const zoom = ref(.9), activeView = ref('diagram'), panelWidth = ref(470), search = ref('');
-                const notes = ref([]), selectedId = ref(''), dirty = ref(false), error = ref(''), toast = ref('');
-                const nodeCount = computed(() => {
-                    const cleaned = stripNotes(source.value);
-                    const ids = new Set();
-                    for (const line of cleaned.split('
-')) {
-        const m = line.trim().match(/^([A-Za-z_][\w-]*)\s*(?:\[|\(|\{)/);
-                    if (m && !['subgraph', 'flowchart', 'end'].includes(m[1])) ids.add(m[1]);
-                }
-      return ids.size;
-            });
-        const noteEntries = computed(() => notes.value);
-        const selectedNote = computed(() => notes.value.find(n => n.nodeId === selectedId.value));
-        const filteredNotes = computed(() => {
-            const q = search.value.trim().toLocaleLowerCase('de');
-            return q ? notes.value.filter(n => `${n.nodeId} ${n.label} ${n.text}`.toLocaleLowerCase('de').includes(q)) : notes.value;
-        });
-        function decode(s) { const t = document.createElement('textarea'); t.innerHTML = s.replaceAll('#quot;', '&quot;'); return t.value; }
+            const NL = String.fromCharCode(10);
+            const BS = String.fromCharCode(92);
+
+            const source = ref(SAMPLE);
+            const diagramEl = ref(null);
+            const viewport = ref(null);
+            const zoom = ref(0.9);
+            const activeView = ref("diagram");
+            const panelWidth = ref(470);
+            const search = ref("");
+            const notes = ref([]);
+            const selectedId = ref("");
+            const dirty = ref(false);
+            const error = ref("");
+            const toast = ref("");
+
+            const splitLines = value => value.split(NL);
+
+            function decode(value) {
+                const area = document.createElement("textarea");
+                area.innerHTML = value.replaceAll("#quot;", "&quot;");
+                return area.value;
+            }
+
         function extractNodeLabels(text) {
-            const map = {};
-            for (const line of text.split('
-')) {
-        const m = line.trim().match(/^([A-Za-z_][\w-]*)\s*(?:\[\("([\s\S]*?)"\)\]|\(\["([\s\S]*?)"\]\)|\["([\s\S]*?)"\]|\{"([\s\S]*?)"\}|\(\("([\s\S]*?)"\)\))/);
-            if (m) map[m[1]] = decode((m.slice(2).find(Boolean) || m[1]).replace(/\
-                / g, ' '));
+            const result = {};
+
+            const pattern =
+                /^([A-Za-z_][\w-]*)\s*(?:\[\("([\s\S]*?)"\)\]|\(\["([\s\S]*?)"\]\)|\["([\s\S]*?)"\]|\{"([\s\S]*?)"\}|\(\("([\s\S]*?)"\)\))/;
+
+            splitLines(text).forEach(line => {
+                const match = line.trim().match(pattern);
+
+                if (!match) {
+                    return;
+                }
+
+              const label = match.slice(2).find(Boolean) || match[1];
+
+              result[match[1]] = decode(
+                  label.split(BS + "n").join(" ")
+              );
+          });
+
+            return result;
         }
-        return map;
-    }
+
         function parseNotes(text) {
-            const labels = extractNodeLabels(text), defs = new Map(), links = new Map();
-            const re = /^([A-Za-z_][\w-]*)@\{\s*shape:\s*braces\s*,\s*label:\s*"((?:[^"\\]|\\.)*)"\s*\}\s*$/gm;
-            let m; while ((m = re.exec(text))) defs.set(m[1], decode(m[2].replace(/\\"/g, '"').replace(/\
-                / g, '
-').replace(/\\\\/g,'\\')));
-      const linkRe = /^([A-Za-z_][\w-]*)\s*---\s*([A-Za-z_][\w-]*)\s*;?\s*$/gm;
-            while ((m = linkRe.exec(text))) if (defs.has(m[1])) links.set(m[1], m[2]); else if (defs.has(m[2])) links.set(m[2], m[1]);
-            return [...defs].map(([noteId, text]) => ({ noteId, nodeId: links.get(noteId) || noteId.replace(/^Note/, ''), label: labels[links.get(noteId)] || links.get(noteId) || '', text }));
+            const labels = extractNodeLabels(text);
+            const definitions = new Map();
+            const links = new Map();
+
+            const notePattern =
+                /^([A-Za-z_][\w-]*)@\{\s*shape:\s*braces\s*,\s*label:\s*"((?:[^"\\]|\\.)*)"\s*\}\s*;?\s*$/gm;
+
+            const linkPattern =
+                /^([A-Za-z_][\w-]*)\s*---\s*([A-Za-z_][\w-]*)\s*;?\s*$/gm;
+
+            let match;
+
+            while ((match = notePattern.exec(text))) {
+                let value = match[2];
+
+                value = value
+                    .split(BS + '"')
+                    .join('"')
+                    .split(BS + "n")
+                    .join(NL)
+                    .split(BS + BS)
+                    .join(BS);
+
+                definitions.set(match[1], decode(value));
+            }
+
+            while ((match = linkPattern.exec(text))) {
+                if (definitions.has(match[1])) {
+                    links.set(match[1], match[2]);
+                } else if (definitions.has(match[2])) {
+                    links.set(match[2], match[1]);
+                }
+            }
+
+            return Array.from(definitions, entry => {
+                const noteId = entry[0];
+                const nodeId =
+                    links.get(noteId) ||
+                    noteId.replace(/^Note/, "");
+
+                return {
+                    noteId,
+                    nodeId,
+                    label: labels[nodeId] || nodeId,
+                    text: entry[1]
+                };
+            });
         }
+
         function stripNotes(text) {
             const noteIds = new Set();
-            const withoutDefs = text.replace(/^([A-Za-z_][\w-]*)@\{\s*shape:\s*braces\s*,\s*label:\s*"(?:[^"\\]|\\.)*"\s*\}\s*;?\s*$/gm, (_, id) => { noteIds.add(id); return ''; });
-            return withoutDefs.split('
-').filter(line => {
-        const m = line.trim().match(/^([A-Za-z_][\w-]*)\s*---\s*([A-Za-z_][\w-]*)\s*;?$/);
-            return !(m && (noteIds.has(m[1]) || noteIds.has(m[2])));
-        }).join('
-').replace(/#quot;/g,' & quot; ');
-    }
-        function augmentStyles(text) {
-            return text + `
-classDef default fill:#fffdf3,stroke:#4d5966,color:#1f2937;
-classDef data fill:#dcebf7,stroke:#47718d,color:#1f2937;
-classDef decision fill:#fff3c4,stroke:#8a7132,color:#1f2937;
-classDef terminal fill:#e5edf4,stroke:#526779,color:#17212b;
-classDef merge fill:#334155,stroke:#1e293b,color:#334155;` + classify(text);
-        }
-        function classify(text) {
-            const data = [], decisions = [], terminals = [], merges = [];
-            for (const line of text.split('
-')){
-        const id = (line.trim().match(/^([A-Za-z_][\w-]*)/) || [])[1]; if (!id) continue;
-            if (/^\w+\[\("/.test(line.trim())) data.push(id);
-            else if (/^\w+\{"/.test(line.trim())) decisions.push(id);
-            else if (/^\w+\(\["/.test(line.trim())) terminals.push(id);
-            else if (/^\w+\(\("/.test(line.trim())) merges.push(id);
-        }
-        return `
-${data.length ? 'class ' + data.join(',') + ' data;' : ''}
-${decisions.length ? 'class ' + decisions.join(',') + ' decision;' : ''}
-${terminals.length ? 'class ' + terminals.join(',') + ' terminal;' : ''}
-${merges.length ? 'class ' + merges.join(',') + ' merge;' : ''}`;
-    }
-        async function renderDiagram() {
-            error.value = ''; notes.value = parseNotes(source.value); dirty.value = false; activeView.value = 'diagram';
-            await nextTick();
-            try {
-                const id = 'ea-diagram-' + Date.now();
-                const result = await mermaid.render(id, augmentStyles(stripNotes(source.value)));
-                diagramEl.value.innerHTML = result.svg;
-                diagramEl.value.querySelectorAll('g.node').forEach(g => g.addEventListener('click', () => {
-                    const raw = g.id || ''; const id = raw.replace(/^flowchart-/, '').replace(/-\d+$/, '');
-                    if (notes.value.some(n => n.nodeId === id)) selectNote(id);
-                }));
-            } catch (e) {
-                error.value = (e?.message || String(e)).replace(/
-                    +/g,'
-'); }
-    }
-            function selectNote(id) { selectedId.value = id; nextTick(() => { diagramEl.value?.querySelectorAll('g.node').forEach(g => g.classList.toggle('selected', g.id.includes(id))); }); }
-            function escapeNote(s) {
-                return s.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/
-                    / g, '\
-');
+
+                const notePattern =
+                    /^([A-Za-z_][\w-]*)@\{\s*shape:\s*braces\s*,\s*label:\s*"(?:[^"\\]|\\.)*"\s*\}\s*;?\s*$/gm;
+
+                const withoutNotes = text.replace(
+                    notePattern,
+                    function replaceNote(all, id) {
+                        noteIds.add(id);
+                        return "";
+                    }
+                );
+
+                return splitLines(withoutNotes)
+                    .filter(line => {
+                        const match = line
+                            .trim()
+                            .match(
+                                /^([A-Za-z_][\w-]*)\s*---\s*([A-Za-z_][\w-]*)\s*;?$/
+                            );
+
+                        return !(
+                            match &&
+                            (
+                                noteIds.has(match[1]) ||
+                                noteIds.has(match[2])
+                            )
+                        );
+                    })
+                    .join(NL)
+                    .replaceAll("#quot;", "&quot;");
             }
+
+            function classifyNodes(text) {
+                const dataObjects = [];
+                const decisions = [];
+                const terminals = [];
+                const merges = [];
+
+                splitLines(text).forEach(line => {
+                    const trimmed = line.trim();
+
+                    const idMatch = trimmed.match(
+                        /^([A-Za-z_][\w-]*)/
+                    );
+
+                    if (!idMatch) {
+                        return;
+                    }
+
+                    const id = idMatch[1];
+
+                    if (/^[A-Za-z_][\w-]*\[\("/.test(trimmed)) {
+                        dataObjects.push(id);
+                    } else if (/^[A-Za-z_][\w-]*\{"/.test(trimmed)) {
+                        decisions.push(id);
+                    } else if (/^[A-Za-z_][\w-]*\(\["/.test(trimmed)) {
+                        terminals.push(id);
+                    } else if (/^[A-Za-z_][\w-]*\(\("/.test(trimmed)) {
+                        merges.push(id);
+                    }
+                });
+
+                return [
+                    dataObjects.length
+                        ? `class ${dataObjects.join(",")} data;`
+                        : "",
+                    decisions.length
+                        ? `class ${decisions.join(",")} decision;`
+                        : "",
+                    terminals.length
+                        ? `class ${terminals.join(",")} terminal;`
+                        : "",
+                    merges.length
+                        ? `class ${merges.join(",")} merge;`
+                        : ""
+                ]
+                    .filter(Boolean)
+                    .join(NL);
+            }
+
+            function buildDiagramSource(text) {
+                const diagram = stripNotes(text);
+
+                const styles = [
+                    "classDef default fill:#fffdf3,stroke:#4d5966,color:#1f2937;",
+                    "classDef data fill:#dcebf7,stroke:#47718d,color:#1f2937;",
+                    "classDef decision fill:#fff3c4,stroke:#8a7132,color:#1f2937;",
+                    "classDef terminal fill:#e5edf4,stroke:#526779,color:#17212b;",
+                    "classDef merge fill:#334155,stroke:#1e293b,color:#334155;"
+                ].join(NL);
+
+                const classifications = classifyNodes(diagram);
+
+                return [
+                    diagram,
+                    styles,
+                    classifications
+                ]
+                    .filter(Boolean)
+                    .join(NL);
+        }
+
+            const nodeCount = computed(() => {
+                const ids = new Set();
+
+                splitLines(stripNotes(source.value)).forEach(line => {
+                    const match = line
+                        .trim()
+                        .match(
+                            /^([A-Za-z_][\w-]*)\s*(?:\[|\(|\{)/
+                        );
+
+                    if (
+                        match &&
+                        !["subgraph", "flowchart", "end"].includes(match[1])
+                    ) {
+                        ids.add(match[1]);
+                    }
+          });
+
+            return ids.size;
+        });
+
+            const noteEntries = computed(() => notes.value);
+
+            const selectedNote = computed(() => {
+                return notes.value.find(
+                    item => item.nodeId === selectedId.value
+                );
+            });
+
+            const filteredNotes = computed(() => {
+                const query = search.value
+                    .trim()
+                    .toLocaleLowerCase("de");
+
+                if (!query) {
+                    return notes.value;
+                }
+
+            return notes.value.filter(item => {
+                return [
+                    item.nodeId,
+                    item.label,
+                    item.text
+                ]
+                    .join(" ")
+                    .toLocaleLowerCase("de")
+                    .includes(query);
+            });
+        });
+
+        async function renderDiagram() {
+            error.value = "";
+            notes.value = parseNotes(source.value);
+            dirty.value = false;
+            activeView.value = "diagram";
+
+            await nextTick();
+
+            try {
+              const renderId =
+                  "eaDiagram" +
+                  Date.now() +
+                  Math.random()
+                      .toString(36)
+                      .slice(2);
+
+              const result = await mermaid.render(
+                  renderId,
+                  buildDiagramSource(source.value)
+              );
+
+              diagramEl.value.innerHTML = result.svg;
+
+                    diagramEl.value
+                        .querySelectorAll("g.node")
+                        .forEach(node => {
+                            node.addEventListener("click", () => {
+                                const id = (node.id || "")
+                                    .replace(/^flowchart-/, "")
+                                    .replace(/-\d+$/, "");
+
+                                if (
+                                    notes.value.some(
+                                        item => item.nodeId === id
+                                    )
+                                ) {
+                                    selectNote(id);
+                                }
+                            });
+                        });
+                } catch (exception) {
+                    error.value =
+                        exception && exception.message
+                            ? exception.message
+                            : String(exception);
+                }
+            }
+
+            function selectNote(id) {
+                selectedId.value = id;
+
+                nextTick(() => {
+                    if (!diagramEl.value) {
+                        return;
+                    }
+
+                    diagramEl.value
+                        .querySelectorAll("g.node")
+                        .forEach(node => {
+                            node.classList.toggle(
+                                "selected",
+                                node.id.includes(id)
+                            );
+                        });
+                });
+            }
+
+            function escapeNote(value) {
+                return value
+                    .split(BS)
+                    .join(BS + BS)
+                    .split('"')
+                    .join(BS + '"')
+                    .split(NL)
+                    .join(BS + "n");
+            }
+
+            function findNoteDefinitionEnd(text, startIndex) {
+                let inString = false;
+                let escaped = false;
+
+                for (
+                    let index = startIndex;
+                    index < text.length;
+                    index += 1
+                ) {
+                    const character = text[index];
+
+                    if (escaped) {
+                        escaped = false;
+                        continue;
+                    }
+
+                    if (character === BS) {
+                        escaped = true;
+                        continue;
+                    }
+
+                    if (character === '"') {
+                        inString = !inString;
+                        continue;
+                    }
+
+                    if (
+                        character === "}" &&
+                        !inString
+                    ) {
+                        return index;
+                    }
+                }
+
+            return -1;
+        }
+
             function applyNotes() {
                 let text = source.value;
-                for (const n of notes.value) {
-                    const pattern = new RegExp(`^${n.noteId}@\\{\\s*shape:\\s*braces\\s*,\\s*label:\\s*"(?:[^"\\\\]|\\\\.)*"\\s*\\}\\s*;?\\s*$`, 'm');
-                    text = text.replace(pattern, `${n.noteId}@{ shape: braces, label: "${escapeNote(n.text)}" }`);
-                }
-                source.value = text; dirty.value = false; showToast('Notizen in den Markdown-Quelltext übernommen');
-            }
-            async function copyMarkdown() { if (dirty.value) applyNotes(); await navigator.clipboard.writeText(source.value); showToast('Markdown in die Zwischenablage kopiert'); }
-            async function copyCurrentNote() { if (selectedNote.value) { await navigator.clipboard.writeText(selectedNote.value.text); showToast('Notiz kopiert'); } }
-            function showToast(msg) { toast.value = msg; setTimeout(() => toast.value = '', 2200); }
-            function zoomIn() { zoom.value = Math.min(2, +(zoom.value + .1).toFixed(2)); }
-            function zoomOut() { zoom.value = Math.max(.3, +(zoom.value - .1).toFixed(2)); }
-            function onWheel(e) { e.deltaY < 0 ? zoomIn() : zoomOut(); }
-            function fitDiagram() { zoom.value = .8; viewport.value?.scrollTo({ top: 0, left: 0, behavior: 'smooth' }); }
-            function startResize(e) { const x = e.clientX, w = panelWidth.value; const move = ev => panelWidth.value = Math.min(620, Math.max(280, w + x - ev.clientX)); const up = () => { removeEventListener('mousemove', move); removeEventListener('mouseup', up) }; addEventListener('mousemove', move); addEventListener('mouseup', up); }
-            onMounted(() => { mermaid.initialize({ startOnLoad: false, securityLevel: 'loose', theme: 'base', flowchart: { curve: 'linear', htmlLabels: true, nodeSpacing: 38, rankSpacing: 56 }, themeVariables: { fontFamily: 'Segoe UI, Arial, sans-serif', primaryColor: '#fffdf3', primaryTextColor: '#1f2937', primaryBorderColor: '#4d5966', lineColor: '#596674', secondaryColor: '#dcebf7', tertiaryColor: '#f1f5f9', clusterBkg: '#e9eef4', clusterBorder: '#778899' } }); renderDiagram(); });
-            return { source, diagramEl, viewport, zoom, activeView, panelWidth, search, notes, selectedId, dirty, error, toast, nodeCount, noteEntries, selectedNote, filteredNotes, renderDiagram, selectNote, applyNotes, copyMarkdown, copyCurrentNote, zoomIn, zoomOut, onWheel, fitDiagram, startResize };
-        }
-}).mount('#app');
-    </script>
-</body>
 
+                notes.value.forEach(item => {
+                    const marker = item.noteId + "@{";
+                    const start = text.indexOf(marker);
+
+                    if (start < 0) {
+                        return;
+                    }
+
+                    const end = findNoteDefinitionEnd(
+                        text,
+                        start + marker.length
+                    );
+
+                    if (end < 0) {
+                        return;
+                    }
+
+                    const replacement =
+                        item.noteId +
+                        '@{ shape: braces, label: "' +
+                        escapeNote(item.text) +
+                        '" }';
+
+                    text =
+                        text.slice(0, start) +
+                        replacement +
+                        text.slice(end + 1);
+                });
+
+                source.value = text;
+                dirty.value = false;
+
+                showToast(
+                    "Notizen in den Markdown-Quelltext übernommen"
+                );
+            }
+
+            async function copyText(value) {
+                if (
+                    navigator.clipboard &&
+                    window.isSecureContext
+                ) {
+                    await navigator.clipboard.writeText(value);
+                    return;
+                }
+
+                const area =
+                    document.createElement("textarea");
+
+                area.value = value;
+                area.setAttribute("readonly", "");
+                area.style.position = "fixed";
+                area.style.left = "-9999px";
+                area.style.opacity = "0";
+
+                document.body.appendChild(area);
+                area.select();
+
+                const successful =
+                    document.execCommand("copy");
+
+                area.remove();
+
+                if (!successful) {
+                    throw new Error(
+                        "Der Text konnte nicht in die Zwischenablage kopiert werden."
+                    );
+                }
+            }
+
+            async function copyMarkdown() {
+                try {
+                    if (dirty.value) {
+                        applyNotes();
+                    }
+
+                    await copyText(source.value);
+                    showToast("Markdown kopiert");
+                } catch (exception) {
+                    error.value =
+                        exception && exception.message
+                            ? exception.message
+                            : String(exception);
+                }
+            }
+
+            async function copyCurrentNote() {
+                if (!selectedNote.value) {
+                    return;
+                }
+
+                try {
+                    await copyText(selectedNote.value.text);
+                    showToast("Notiz kopiert");
+                } catch (exception) {
+                    error.value =
+                        exception && exception.message
+                            ? exception.message
+                            : String(exception);
+                }
+            }
+
+            function showToast(message) {
+                toast.value = message;
+
+                window.setTimeout(() => {
+                    toast.value = "";
+                }, 2200);
+            }
+
+            function zoomIn() {
+                zoom.value = Math.min(
+                    2,
+                    Number((zoom.value + 0.1).toFixed(2))
+                );
+            }
+
+            function zoomOut() {
+                zoom.value = Math.max(
+                    0.3,
+                    Number((zoom.value - 0.1).toFixed(2))
+                );
+            }
+
+            function onWheel(event) {
+                if (event.deltaY < 0) {
+                    zoomIn();
+                } else {
+                    zoomOut();
+                }
+            }
+
+            function fitDiagram() {
+                zoom.value = 0.8;
+
+                if (viewport.value) {
+                    viewport.value.scrollTo({
+                        top: 0,
+                        left: 0,
+                        behavior: "smooth"
+                    });
+                }
+            }
+
+            function startResize(event) {
+                const startX = event.clientX;
+                const startWidth = panelWidth.value;
+
+                const move = currentEvent => {
+                    panelWidth.value = Math.min(
+                        620,
+                        Math.max(
+                            280,
+                            startWidth +
+                            startX -
+                            currentEvent.clientX
+                        )
+                    );
+                };
+
+                const up = () => {
+                    window.removeEventListener(
+                        "mousemove",
+                        move
+                    );
+
+                    window.removeEventListener(
+                        "mouseup",
+                        up
+                    );
+                };
+
+                window.addEventListener(
+                    "mousemove",
+                    move
+                );
+
+                window.addEventListener(
+                    "mouseup",
+                    up
+                );
+            }
+
+            onMounted(() => {
+                if (
+                    typeof mermaid === "undefined"
+                ) {
+                    error.value =
+                        "Mermaid konnte nicht geladen werden.";
+                    return;
+                }
+
+            mermaid.initialize({
+                startOnLoad: false,
+                securityLevel: "loose",
+                theme: "base",
+                flowchart: {
+                    curve: "linear",
+                    htmlLabels: true,
+                    nodeSpacing: 38,
+                    rankSpacing: 56
+                },
+                themeVariables: {
+                    fontFamily:
+                        "Segoe UI, Arial, sans-serif",
+                    primaryColor: "#fffdf3",
+                    primaryTextColor: "#1f2937",
+                    primaryBorderColor: "#4d5966",
+                    lineColor: "#596674",
+                    secondaryColor: "#dcebf7",
+                    tertiaryColor: "#f1f5f9",
+                    clusterBkg: "#e9eef4",
+                    clusterBorder: "#778899"
+            }
+          });
+
+            renderDiagram();
+        });
+
+            return {
+                source,
+                diagramEl,
+                viewport,
+                zoom,
+                activeView,
+                panelWidth,
+                search,
+                notes,
+                selectedId,
+                dirty,
+                error,
+                toast,
+                nodeCount,
+                noteEntries,
+                selectedNote,
+                filteredNotes,
+                renderDiagram,
+                selectNote,
+                applyNotes,
+                copyMarkdown,
+                copyCurrentNote,
+                zoomIn,
+                zoomOut,
+                onWheel,
+                fitDiagram,
+                startResize
+            };
+        }
+    }).mount("#app");
+  </script>
+</body>
 </html>
