@@ -267,6 +267,16 @@
     <span class="material-icons-round !text-[16px]">content_copy</span>
     <span class="hidden sm:inline">Mermaid kopieren</span>
 </button>
+
+<div class="h-5 w-px bg-white/20 mx-1.5"></div>
+
+<button type="button"
+    title="Als HTML herunterladen"
+    class="h-8 px-2.5 rounded bg-white/10 hover:bg-white/20 flex items-center gap-1.5 text-xs font-medium shadow"
+    @click="downloadHtml">
+    <span class="material-icons-round !text-[16px]">download</span>
+    <span class="hidden sm:inline">Als HTML herunterladen</span>
+</button>
 </div>
 </header>
 
@@ -1083,6 +1093,101 @@ NoteEnd --- End`;
                 }
             }
 
+            function escapeTemplateLiteral(value) {
+                return value
+                    .split(BS)
+                    .join(BS + BS)
+                    .split("`")
+                    .join(BS + "`")
+                    .split("${")
+                    .join(BS + "${");
+            }
+
+            function findTemplateLiteralEnd(text, startIndex) {
+                let escaped = false;
+
+                for (
+                    let index = startIndex;
+                    index < text.length;
+                    index += 1
+                ) {
+                    const character = text[index];
+
+                    if (escaped) {
+                        escaped = false;
+                        continue;
+                    }
+
+                    if (character === BS) {
+                        escaped = true;
+                        continue;
+                    }
+
+                    if (character === "`") {
+                        return index;
+                    }
+                }
+
+                return -1;
+            }
+
+            async function downloadHtml() {
+                try {
+                    if (dirty.value) {
+                        applyNotes();
+                    }
+
+                    const response = await fetch(location.href);
+                    const html = await response.text();
+
+                    const marker = "const SAMPLE = `";
+                    const start = html.indexOf(marker);
+
+                    if (start < 0) {
+                        throw new Error(
+                            "Vorlage konnte im Dokument nicht gefunden werden."
+                        );
+                    }
+
+                    const contentStart = start + marker.length;
+                    const end = findTemplateLiteralEnd(
+                        html,
+                        contentStart
+                    );
+
+                    if (end < 0) {
+                        throw new Error(
+                            "Ende der Vorlage konnte nicht gefunden werden."
+                        );
+                    }
+
+                    const result =
+                        html.slice(0, contentStart) +
+                        escapeTemplateLiteral(source.value) +
+                        html.slice(end);
+
+                    const blob = new Blob([result], {
+                        type: "text/html"
+                    });
+
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+
+                    link.href = url;
+                    link.download = "mermaid-renderer.html";
+                    link.click();
+
+                    URL.revokeObjectURL(url);
+
+                    showToast("HTML-Datei heruntergeladen");
+                } catch (exception) {
+                    error.value =
+                        exception && exception.message
+                            ? exception.message
+                            : String(exception);
+                }
+            }
+
             async function copyCurrentNote() {
                 if (!selectedNote.value) {
                     return;
@@ -1436,6 +1541,7 @@ NoteEnd --- End`;
                 applyNotes,
                 copyMarkdown,
                 pasteMermaid,
+                downloadHtml,
                 copyCurrentNote,
                 zoomIn,
                 zoomOut,
