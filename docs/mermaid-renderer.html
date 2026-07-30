@@ -71,7 +71,7 @@
     .diagram .node path,
     .diagram .node circle,
     .diagram .node ellipse {
-      stroke: #4d5966 !important;
+      stroke: #69738C !important;
       stroke-width: 1.1px !important;
       filter: drop-shadow(0 1px 1px rgba(15, 23, 42, 0.12));
     }
@@ -717,11 +717,11 @@ NoteEnd --- End`;
                             "classDef merge fill:#0f172a,stroke:#475569,color:#0f172a;"
                         ]
                         : [
-                            "classDef default fill:#fffdf3,stroke:#4d5966,color:#1f2937;",
-                            "classDef data fill:#dcebf7,stroke:#47718d,color:#1f2937;",
-                            "classDef decision fill:#fff3c4,stroke:#8a7132,color:#1f2937;",
-                            "classDef terminal fill:#e5edf4,stroke:#526779,color:#17212b;",
-                            "classDef merge fill:#334155,stroke:#1e293b,color:#334155;"
+                            "classDef default fill:#FDF1D9,stroke:#69738C,color:#1f2937;",
+                            "classDef data fill:#E2F3EE,stroke:#69738C,color:#1f2937;",
+                            "classDef decision fill:#CBE19E,stroke:#69738C,color:#1f2937;",
+                            "classDef terminal fill:#e5edf4,stroke:#69738C,color:#17212b;",
+                            "classDef merge fill:#334155,stroke:#69738C,color:#334155;"
                         ]
                 ).join(NL);
 
@@ -735,6 +735,78 @@ NoteEnd --- End`;
                     .filter(Boolean)
                     .join(NL);
         }
+
+            const NODE_GRADIENTS = [
+                { id: "eaObjectGradient", from: "#E2F3EE", to: "#CEEAE2" },
+                { id: "eaActionGradient", from: "#FDF1D9", to: "#FBE6BC" }
+            ];
+
+            function injectGradients(svg) {
+                if (darkMode.value) {
+                    return;
+                }
+
+                const NS = "http://www.w3.org/2000/svg";
+                let defs = svg.querySelector("defs");
+
+                if (!defs) {
+                    defs = document.createElementNS(NS, "defs");
+                    svg.insertBefore(defs, svg.firstChild);
+                }
+
+                NODE_GRADIENTS.forEach(({ id, from, to }) => {
+                    const gradient = document.createElementNS(
+                        NS,
+                        "linearGradient"
+                    );
+
+                    gradient.setAttribute("id", id);
+                    gradient.setAttribute("x1", "0");
+                    gradient.setAttribute("y1", "0");
+                    gradient.setAttribute("x2", "1");
+                    gradient.setAttribute("y2", "0");
+
+                    const stopFrom = document.createElementNS(NS, "stop");
+                    stopFrom.setAttribute("offset", "0%");
+                    stopFrom.setAttribute("stop-color", from);
+
+                    const stopTo = document.createElementNS(NS, "stop");
+                    stopTo.setAttribute("offset", "100%");
+                    stopTo.setAttribute("stop-color", to);
+
+                    gradient.appendChild(stopFrom);
+                    gradient.appendChild(stopTo);
+                    defs.appendChild(gradient);
+                });
+
+                svg.querySelectorAll("g.node").forEach(node => {
+                    const shape = node.querySelector(
+                        "rect, polygon, path, circle, ellipse"
+                    );
+
+                    if (!shape) {
+                        return;
+                    }
+
+                    if (node.classList.contains("data")) {
+                        shape.style.setProperty(
+                            "fill",
+                            "url(#eaObjectGradient)",
+                            "important"
+                        );
+                    } else if (
+                        !node.classList.contains("decision") &&
+                        !node.classList.contains("terminal") &&
+                        !node.classList.contains("merge")
+                    ) {
+                        shape.style.setProperty(
+                            "fill",
+                            "url(#eaActionGradient)",
+                            "important"
+                        );
+                    }
+                });
+            }
 
             const allNodeIds = computed(() => {
                 const ids = new Set();
@@ -828,6 +900,7 @@ NoteEnd --- End`;
                     const svg = diagramEl.value.querySelector("svg");
 
                     if (svg) {
+                        injectGradients(svg);
                         baseWidth.value = svg.getBoundingClientRect().width;
                         applyZoomToSvg();
                     }
@@ -1436,8 +1509,8 @@ NoteEnd --- End`;
                             fontSize: fontSize.value + "px",
                             primaryColor: "#fffdf3",
                             primaryTextColor: "#1f2937",
-                            primaryBorderColor: "#4d5966",
-                            lineColor: "#596674",
+                            primaryBorderColor: "#69738C",
+                            lineColor: "#69738C",
                             secondaryColor: "#dcebf7",
                             tertiaryColor: "#f1f5f9",
                             clusterBkg: "#e9eef4",
