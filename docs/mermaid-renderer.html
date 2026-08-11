@@ -93,7 +93,6 @@
     }
 
     .diagram .cluster-label {
-      font-weight: 600;
       color: #334155 !important;
     }
 
@@ -132,8 +131,23 @@
       color: #cbd5e1 !important;
     }
 
-    .diagram g.node {
+    .diagram g.node,
+    .diagram g.cluster {
       cursor: pointer;
+    }
+
+    .diagram g.cluster.selected rect {
+      stroke: #005fb8 !important;
+      stroke-width: 2.5px !important;
+    }
+
+    .diagram g.cluster.missing-note rect {
+      stroke: #dc2626 !important;
+      stroke-width: 2.5px !important;
+    }
+
+    .dark .diagram g.cluster.missing-note rect {
+      stroke: #f87171 !important;
     }
 
     .diagram g.node:hover rect,
@@ -315,7 +329,7 @@
         </div>
 
         <div v-if="activeView === 'diagram'" ref="viewport" class="flex-1 min-h-0 ea-grid overflow-auto"
-            @wheel="onWheel" @mousedown="startPan">
+            @wheel="onWheel" @mousedown="startPan" @scroll="saveCamera">
             <div class="min-w-full min-h-full p-10 flex items-start">
             <div ref="diagramEl" class="diagram mx-auto"></div>
             </div>
@@ -404,9 +418,19 @@
                         selectedId === item.nodeId
                           ? 'bg-[#dcecf9] dark:bg-sky-500/15 border-l-[#0b6bcb] dark:border-l-sky-400'
                           : 'border-l-transparent hover:bg-slate-50 dark:hover:bg-white/5'
-                      " @click="selectNote(item.nodeId)">
-                <div class="text-xs font-medium text-slate-700 dark:text-slate-200 line-clamp-3">
-                    {{ item.label }}
+                      " @click="selectNote(item.nodeId)" @dblclick="focusNote(item.nodeId)">
+                <div class="flex items-start gap-2">
+                    <svg viewBox="0 0 16 16" width="12" height="12" class="mt-0.5 shrink-0">
+                        <rect v-if="nodeIcon(item.nodeId).shape === 'rect'" x="1.5" y="3" width="13" height="10" rx="1.5" :fill="nodeIcon(item.nodeId).fill" :stroke="nodeIcon(item.nodeId).stroke" stroke-width="1.2"></rect>
+                        <rect v-else-if="nodeIcon(item.nodeId).shape === 'stadium'" x="1.5" y="4" width="13" height="8" rx="4" :fill="nodeIcon(item.nodeId).fill" :stroke="nodeIcon(item.nodeId).stroke" stroke-width="1.2"></rect>
+                        <polygon v-else-if="nodeIcon(item.nodeId).shape === 'diamond'" points="8,1.5 14.5,8 8,14.5 1.5,8" :fill="nodeIcon(item.nodeId).fill" :stroke="nodeIcon(item.nodeId).stroke" stroke-width="1.2"></polygon>
+                        <polygon v-else-if="nodeIcon(item.nodeId).shape === 'parallelogram'" points="4,3 15,3 12,13 1,13" :fill="nodeIcon(item.nodeId).fill" :stroke="nodeIcon(item.nodeId).stroke" stroke-width="1.2"></polygon>
+                        <circle v-else-if="nodeIcon(item.nodeId).shape === 'circle'" cx="8" cy="8" r="6" :fill="nodeIcon(item.nodeId).fill" :stroke="nodeIcon(item.nodeId).stroke" stroke-width="1.2"></circle>
+                        <rect v-else x="1.5" y="1.5" width="13" height="13" rx="2" :fill="nodeIcon(item.nodeId).fill" :stroke="nodeIcon(item.nodeId).stroke" stroke-width="1.2" stroke-dasharray="2 1.5"></rect>
+                    </svg>
+                    <div class="text-xs font-medium text-slate-700 dark:text-slate-200 line-clamp-3">
+                        {{ item.label }}
+                    </div>
                 </div>
             </button>
 <div v-if="!filteredNotes.length" class="p-4 text-center text-xs text-slate-500 dark:text-slate-400">
@@ -520,7 +544,15 @@ NoteEnd --- End`;
             );
             const diagramEl = ref(null);
             const viewport = ref(null);
-            const zoom = ref(0.9);
+            const CAMERA_KEY = "mermaidRendererCamera";
+            const savedCamera = (() => {
+                try {
+                    return JSON.parse(localStorage.getItem(CAMERA_KEY) || "null");
+                } catch (exception) {
+                    return null;
+                }
+            })();
+            const zoom = ref(savedCamera ? savedCamera.zoom : 0.9);
             const baseWidth = ref(0);
             const activeView = ref("diagram");
             const panelWidth = ref(470);
@@ -540,6 +572,7 @@ NoteEnd --- End`;
             const fontSize = ref(
                 Number(localStorage.getItem("mermaidRendererFontSize")) || 13
             );
+            const currentRenderId = ref("");
 
             const splitLines = value => value.split(NL);
 
@@ -556,7 +589,20 @@ NoteEnd --- End`;
                 /^([A-Za-z_][\w-]*)\s*(?:\[\("([\s\S]*?)"\)\]|\(\["([\s\S]*?)"\]\)|\["([\s\S]*?)"\]|\{"([\s\S]*?)"\}|\(\("([\s\S]*?)"\)\))/;
 
             splitLines(text).forEach(line => {
-                const match = line.trim().match(pattern);
+                const trimmed = line.trim();
+
+                const sub = trimmed.match(
+                    /^subgraph\s+([A-Za-z_][\w-]*)\s*(?:\[\s*"?([^\]"]*)"?\s*\])?/
+                );
+
+                if (sub) {
+                    result[sub[1]] = decode(
+                        (sub[2] || sub[1]).split(BS + "n").join(" ")
+                    );
+                    return;
+                }
+
+                const match = trimmed.match(pattern);
 
                 if (!match) {
                     return;
@@ -656,14 +702,20 @@ NoteEnd --- End`;
                     .replaceAll("#quot;", "&quot;");
             }
 
-            function classifyNodes(text) {
-                const dataObjects = [];
-                const decisions = [];
-                const terminals = [];
-                const merges = [];
+            function buildTypeMap(text) {
+                const map = {};
 
                 splitLines(text).forEach(line => {
                     const trimmed = line.trim();
+
+                    const sub = trimmed.match(
+                        /^subgraph\s+([A-Za-z_][\w-]*)/
+                    );
+
+                    if (sub) {
+                        map[sub[1]] = "cluster";
+                        return;
+                    }
 
                     const idMatch = trimmed.match(
                         /^([A-Za-z_][\w-]*)/
@@ -676,31 +728,32 @@ NoteEnd --- End`;
                     const id = idMatch[1];
 
                     if (/^[A-Za-z_][\w-]*\[\("/.test(trimmed)) {
-                        dataObjects.push(id);
+                        map[id] = "data";
                     } else if (/^[A-Za-z_][\w-]*\{"/.test(trimmed)) {
-                        decisions.push(id);
+                        map[id] = "decision";
                     } else if (/^[A-Za-z_][\w-]*\(\["/.test(trimmed)) {
-                        terminals.push(id);
+                        map[id] = "terminal";
                     } else if (/^[A-Za-z_][\w-]*\(\("/.test(trimmed)) {
-                        merges.push(id);
+                        map[id] = "merge";
                     }
                 });
 
-                return [
-                    dataObjects.length
-                        ? `class ${dataObjects.join(",")} data;`
-                        : "",
-                    decisions.length
-                        ? `class ${decisions.join(",")} decision;`
-                        : "",
-                    terminals.length
-                        ? `class ${terminals.join(",")} terminal;`
-                        : "",
-                    merges.length
-                        ? `class ${merges.join(",")} merge;`
-                        : ""
-                ]
-                    .filter(Boolean)
+                return map;
+            }
+
+            function classifyNodes(text) {
+                const map = buildTypeMap(text);
+                const groups = { data: [], decision: [], terminal: [], merge: [] };
+
+                Object.keys(map).forEach(id => {
+                    if (groups[map[id]]) {
+                        groups[map[id]].push(id);
+                    }
+                });
+
+                return Object.keys(groups)
+                    .filter(type => groups[type].length)
+                    .map(type => `class ${groups[type].join(",")} ${type};`)
                     .join(NL);
             }
 
@@ -710,9 +763,9 @@ NoteEnd --- End`;
                 const styles = (
                     darkMode.value
                         ? [
-                            "classDef default fill:#2a2f3a,stroke:#8a93a3,color:#e2e8f0;",
+                            "classDef default fill:#4a4020,stroke:#8a93a3,color:#e2e8f0;",
                             "classDef data fill:#20384a,stroke:#6ea8cf,color:#e2e8f0;",
-                            "classDef decision fill:#4a3f14,stroke:#d8b94d,color:#f5eccb;",
+                            "classDef decision fill:#3d4a26,stroke:#a8c97a,color:#e6f0d0;",
                             "classDef terminal fill:#232936,stroke:#8a93a3,color:#e2e8f0;",
                             "classDef merge fill:#0f172a,stroke:#475569,color:#0f172a;"
                         ]
@@ -736,15 +789,21 @@ NoteEnd --- End`;
                     .join(NL);
         }
 
-            const NODE_GRADIENTS = [
-                { id: "eaObjectGradient", from: "#E2F3EE", to: "#CEEAE2" },
-                { id: "eaActionGradient", from: "#FDF1D9", to: "#FBE6BC" }
-            ];
+            const NODE_GRADIENTS = {
+                light: [
+                    { id: "eaObjectGradient", from: "#E2F3EE", to: "#CEEAE2" },
+                    { id: "eaActionGradient", from: "#FDF1D9", to: "#FBE6BC" }
+                ],
+                dark: [
+                    { id: "eaObjectGradient", from: "#20384a", to: "#16283a" },
+                    { id: "eaActionGradient", from: "#4a4020", to: "#3a3218" }
+                ]
+            };
 
             function injectGradients(svg) {
-                if (darkMode.value) {
-                    return;
-                }
+                const gradients = darkMode.value
+                    ? NODE_GRADIENTS.dark
+                    : NODE_GRADIENTS.light;
 
                 const NS = "http://www.w3.org/2000/svg";
                 let defs = svg.querySelector("defs");
@@ -754,7 +813,7 @@ NoteEnd --- End`;
                     svg.insertBefore(defs, svg.firstChild);
                 }
 
-                NODE_GRADIENTS.forEach(({ id, from, to }) => {
+                gradients.forEach(({ id, from, to }) => {
                     const gradient = document.createElementNS(
                         NS,
                         "linearGradient"
@@ -812,11 +871,11 @@ NoteEnd --- End`;
                 const ids = new Set();
 
                 splitLines(stripNotes(source.value)).forEach(line => {
-                    const match = line
-                        .trim()
-                        .match(
-                            /^([A-Za-z_][\w-]*)\s*(?:\[|\(|\{)/
-                        );
+                    const trimmed = line.trim();
+
+                    const match = trimmed.match(
+                        /^([A-Za-z_][\w-]*)\s*(?:\[|\(|\{)/
+                    );
 
                     if (
                         match &&
@@ -824,10 +883,44 @@ NoteEnd --- End`;
                     ) {
                         ids.add(match[1]);
                     }
+
+                    const sub = trimmed.match(
+                        /^subgraph\s+([A-Za-z_][\w-]*)/
+                    );
+
+                    if (sub) {
+                        ids.add(sub[1]);
+                    }
           });
 
             return ids;
         });
+
+            const nodeTypeMap = computed(() =>
+                buildTypeMap(stripNotes(source.value))
+            );
+
+            const nodeYPositions = ref({});
+
+            const ICON_STYLES = {
+                data: { shape: "parallelogram", light: "#E2F3EE", dark: "#20384a" },
+                decision: { shape: "diamond", light: "#CBE19E", dark: "#3d4a26" },
+                terminal: { shape: "stadium", light: "#e5edf4", dark: "#232936" },
+                merge: { shape: "circle", light: "#334155", dark: "#0f172a" },
+                cluster: { shape: "cluster", light: "rgba(228, 235, 244, 0.62)", dark: "rgba(35, 41, 54, 0.62)" },
+                default: { shape: "rect", light: "#FDF1D9", dark: "#4a4020" }
+            };
+
+            function nodeIcon(id) {
+                const type = nodeTypeMap.value[id] || "default";
+                const style = ICON_STYLES[type];
+
+                return {
+                    shape: style.shape,
+                    fill: darkMode.value ? style.dark : style.light,
+                    stroke: darkMode.value ? "#8a93a3" : "#69738C"
+                };
+            }
 
             const nodeCount = computed(() => allNodeIds.value.size);
 
@@ -854,20 +947,28 @@ NoteEnd --- End`;
                     .trim()
                     .toLocaleLowerCase("de");
 
-                if (!query) {
-                    return notes.value;
-                }
+                const items = query
+                    ? notes.value.filter(item => {
+                        return [
+                            item.nodeId,
+                            item.label,
+                            item.text
+                        ]
+                            .join(" ")
+                            .toLocaleLowerCase("de")
+                            .includes(query);
+                    })
+                    : notes.value;
 
-            return notes.value.filter(item => {
-                return [
-                    item.nodeId,
-                    item.label,
-                    item.text
-                ]
-                    .join(" ")
-                    .toLocaleLowerCase("de")
-                    .includes(query);
-            });
+                return items.slice().sort((a, b) => {
+                    const yA = nodeYPositions.value[a.nodeId];
+                    const yB = nodeYPositions.value[b.nodeId];
+
+                    return (
+                        (yA === undefined ? Infinity : yA) -
+                        (yB === undefined ? Infinity : yB)
+                    );
+                });
         });
 
         async function renderDiagram() {
@@ -889,6 +990,8 @@ NoteEnd --- End`;
                   Math.random()
                       .toString(36)
                       .slice(2);
+
+              currentRenderId.value = renderId;
 
               const result = await mermaid.render(
                   renderId,
@@ -925,6 +1028,37 @@ NoteEnd --- End`;
                             });
                         });
 
+                    diagramEl.value
+                        .querySelectorAll("g.cluster")
+                        .forEach(cluster => {
+                            cluster.addEventListener("click", event => {
+                                event.stopPropagation();
+
+                                const id = elementNodeId(cluster);
+
+                                if (!id) {
+                                    return;
+                                }
+
+                                ensureNote(id, labels[id] || id);
+                                selectNote(id);
+                            });
+                        });
+
+                    const yMap = {};
+
+                    diagramEl.value
+                        .querySelectorAll("g.node, g.cluster")
+                        .forEach(el => {
+                            const id = elementNodeId(el);
+
+                            if (id) {
+                                yMap[id] = el.getBoundingClientRect().top;
+                            }
+                        });
+
+                    nodeYPositions.value = yMap;
+
                     applyMissingNoteHighlight();
                 } catch (exception) {
                     error.value =
@@ -947,6 +1081,22 @@ NoteEnd --- End`;
                 });
             }
 
+            function elementNodeId(element) {
+                if (element.classList.contains("cluster")) {
+                    return currentRenderId.value
+                        ? element.id.replace(
+                            new RegExp("^" + currentRenderId.value + "-"),
+                            ""
+                        )
+                        : element.id;
+                }
+
+                return (element.id || "")
+                    .split("flowchart-")
+                    .pop()
+                    .replace(/-\d+$/, "");
+            }
+
             function selectNote(id) {
                 selectedId.value = id;
 
@@ -956,14 +1106,56 @@ NoteEnd --- End`;
                     }
 
                     diagramEl.value
-                        .querySelectorAll("g.node")
+                        .querySelectorAll("g.node, g.cluster")
                         .forEach(node => {
                             node.classList.toggle(
                                 "selected",
-                                node.id.includes(id)
+                                elementNodeId(node) === id
                             );
                         });
                 });
+            }
+
+            function focusNote(id) {
+                selectNote(id);
+
+                const scrollToNode = () => {
+                    nextTick(() => {
+                        if (!diagramEl.value || !viewport.value) {
+                            return;
+                        }
+
+                        const el = [...diagramEl.value.querySelectorAll(
+                            "g.node, g.cluster"
+                        )].find(node => elementNodeId(node) === id);
+
+                        if (!el) {
+                            return;
+                        }
+
+                        const elRect = el.getBoundingClientRect();
+                        const vpRect = viewport.value.getBoundingClientRect();
+
+                        const centerX =
+                            elRect.left + elRect.width / 2 -
+                            vpRect.left + viewport.value.scrollLeft;
+                        const centerY =
+                            elRect.top + elRect.height / 2 -
+                            vpRect.top + viewport.value.scrollTop;
+
+                        viewport.value.scrollTo({
+                            left: centerX - viewport.value.clientWidth / 2,
+                            top: centerY - viewport.value.clientHeight / 2,
+                            behavior: "smooth"
+                        });
+                    });
+                };
+
+                if (activeView.value !== "diagram") {
+                    renderDiagram().then(scrollToNode);
+                } else {
+                    scrollToNode();
+                }
             }
 
             function toggleMissingNotesHighlight() {
@@ -979,12 +1171,9 @@ NoteEnd --- End`;
                 const missing = new Set(missingNoteIds.value);
 
                 diagramEl.value
-                    .querySelectorAll("g.node")
+                    .querySelectorAll("g.node, g.cluster")
                     .forEach(node => {
-                        const id = (node.id || "")
-                            .split("flowchart-")
-                            .pop()
-                            .replace(/-\d+$/, "");
+                        const id = elementNodeId(node);
 
                         node.classList.toggle(
                             "missing-note",
@@ -1543,7 +1732,18 @@ NoteEnd --- End`;
                 }
             });
 
-            watch(zoom, applyZoomToSvg);
+            function saveCamera() {
+                localStorage.setItem(CAMERA_KEY, JSON.stringify({
+                    zoom: zoom.value,
+                    left: viewport.value ? viewport.value.scrollLeft : 0,
+                    top: viewport.value ? viewport.value.scrollTop : 0
+                }));
+            }
+
+            watch(zoom, value => {
+                applyZoomToSvg();
+                saveCamera();
+            });
 
             watch(fontSize, value => {
                 localStorage.setItem("mermaidRendererFontSize", value);
@@ -1583,7 +1783,18 @@ NoteEnd --- End`;
                 }
 
                 initMermaid();
-                renderDiagram();
+                renderDiagram().then(() => {
+                    nextTick(() => {
+                        if (savedCamera && viewport.value) {
+                            viewport.value.scrollTo({
+                                left: savedCamera.left || 0,
+                                top: savedCamera.top || 0
+                            });
+                        } else {
+                            fitDiagram();
+                        }
+                    });
+                });
             });
 
             return {
@@ -1626,7 +1837,10 @@ NoteEnd --- End`;
                 onWheel,
                 fitDiagram,
                 startPan,
-                startResize
+                startResize,
+                saveCamera,
+                nodeIcon,
+                focusNote
             };
         }
     }).mount("#app");
